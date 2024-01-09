@@ -18,7 +18,7 @@ void main() async {
   await websocketServer.start();
 
   // Initialize and start the HTTP server
-  final httpServer = HttpServer(httpPort, deviceManager, database);
+  final httpServer = MyHttpServer(httpPort, deviceManager, database);
   await httpServer.start();
 
   print('Servers running. WebSocket on port $websocketPort and HTTP on port $httpPort.');

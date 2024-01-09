@@ -8,18 +8,21 @@ import 'package:shelf_router/shelf_router.dart';
 import 'device_manager.dart';
 import 'database.dart';
 
-class HttpServer {
+class MyHttpServer {
   final DeviceManager deviceManager;
   final Database database;
   final int port;
 
-  HttpServer(this.port, this.deviceManager, this.database);
+  late HttpServer _server;
+
+  MyHttpServer(this.port, this.deviceManager, this.database);
 
   Handler get handler {
     final router = Router();
 
     // Endpoint to send a message to a connected device
-    router.post('/sendMessage/<deviceId>', (Request request, String deviceId) async {
+    router.post('/sendMessage/<deviceId>',
+        (Request request, String deviceId) async {
       if (!deviceManager.isConnected(deviceId)) {
         return Response.notFound('Device not connected');
       }
@@ -34,20 +37,22 @@ class HttpServer {
     });
 
     // Endpoint to retrieve message history for a device
-    router.get('/getHistory/<deviceId>', (Request request, String deviceId) async {
-      final messages =  (await database.getMessages(deviceId)).map((m) => m.toJson());
-      return Response.ok(jsonEncode(messages), headers: {'Content-Type': 'application/json'});
+    router.get('/getHistory/<deviceId>',
+        (Request request, String deviceId) async {
+      final messages =
+          (await database.getMessages(deviceId)).map((m) => m.toJson());
+      return Response.ok(jsonEncode(messages),
+          headers: {'Content-Type': 'application/json'});
     });
-
 
     router.get('/downloadChatHistory', (Request request) async {
       final zipFileBytes = await createChatHistoryZip();
       return Response.ok(zipFileBytes, headers: {
         HttpHeaders.contentTypeHeader: 'application/zip',
-        HttpHeaders.contentDisposition: 'attachment; filename="chat_history.zip"'
+        HttpHeaders.contentDisposition:
+            'attachment; filename="chat_history.zip"'
       });
     });
-
 
     return router;
   }
@@ -55,15 +60,17 @@ class HttpServer {
   Future<List<int>> createChatHistoryZip() async {
     // Create a new archive
     final archive = Archive();
-    final ids =await database.getAllDeviceIdsInDatabase();
+    final ids = await database.getAllDeviceIdsInDatabase();
     // Add chat history files for each device
     for (var deviceId in ids) {
-      final messages = (await database.getMessages(deviceId)).map((m) => m.toJson());
+      final messages =
+          (await database.getMessages(deviceId)).map((m) => m.toJson());
       final fileName = '$deviceId.txt';
       final fileContent = jsonEncode(messages);
 
       // Add a file to the archive
-      final file = ArchiveFile(fileName, fileContent.length, fileContent.codeUnits);
+      final file =
+          ArchiveFile(fileName, fileContent.length, fileContent.codeUnits);
       archive.addFile(file);
     }
 
@@ -72,7 +79,11 @@ class HttpServer {
   }
 
   Future<void> start() async {
-    final server = await io.serve(handler, InternetAddress.anyIPv4, port);
-    print('HTTP Server running on http://localhost:${server.port}');
+    _server = await io.serve(handler, InternetAddress.anyIPv4, port);
+    print('HTTP Server running on http://localhost:${_server.port}');
+  }
+
+  Future<void> stop() async {
+    await _server.close();
   }
 }

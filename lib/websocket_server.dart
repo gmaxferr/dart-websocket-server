@@ -11,8 +11,8 @@ class WebSocketServer {
 
   WebSocketServer(this.port, this.deviceManager, this.database);
 
-  Future<void> start() async {
-    _server = await HttpServer.bind(InternetAddress.anyIPv4, port);
+  Future<void> start({HttpServer? server}) async {
+    _server = server ?? await HttpServer.bind(InternetAddress.anyIPv4, port);
     print('WebSocket Server is running on ws://localhost:$port');
 
     await for (var request in _server) {
@@ -59,7 +59,7 @@ class WebSocketServer {
 
   void handleMessage(String deviceId, String message) async {
     print('Message from device $deviceId: $message');
-    
+
     // Store the message in the database
     await database.storeMessage(deviceId, message, deviceId);
   }
