@@ -4,6 +4,7 @@ import 'package:archive/archive_io.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
+import 'package:path/path.dart' as path;
 
 import 'device_manager.dart';
 import 'database.dart';
@@ -57,6 +58,18 @@ class MyHttpServer {
     router.post('/deleteDatabase', (Request request) async {
       database.deleteAll();
       return Response.ok('Database deleted!');
+    });
+
+
+    // Route to serve index.html
+    router.get('/simple-client', (Request request) async {
+      final indexPath = path.join(Directory.current.path, '_html_client', 'index.html');
+      final file = File(indexPath);
+      if (await file.exists()) {
+        return Response.ok(await file.readAsString(), headers: {'Content-Type': 'text/html'});
+      } else {
+        return Response.notFound('Page not found');
+      }
     });
 
     return router;
