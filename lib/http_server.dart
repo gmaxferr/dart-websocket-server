@@ -62,9 +62,11 @@ class MyHttpServer {
 
 
     // Route to serve index.html
-    router.get('/simple-client', (Request request) async {
-      final indexPath = path.join(Directory.current.path, '_html_client', 'index.html');
+     router.get('/simple-client', (Request request) async {
+      // Adjusted path to match the new location of index.html
+      final indexPath = path.join(Directory.current.path, 'lib', 'pages', 'index.html');
       final file = File(indexPath);
+
       if (await file.exists()) {
         return Response.ok(await file.readAsString(), headers: {'Content-Type': 'text/html'});
       } else {
