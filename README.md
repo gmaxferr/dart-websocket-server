@@ -3,12 +3,16 @@
 This project implements a Dart WebSocket server with an HTTP server for managing device connections, messages, and storing chat history in a SQLite database.
 
 ## Getting Started
+
 These instructions will get your copy of the project up and running on your local machine for development and testing purposes.
 
 ### Prerequisites
-Dart SDK: Ensure you have the Dart SDK installed on your machine. To install Dart, follow the instructions on the official Dart website.
-SQLite: This project uses SQLite for storing chat history. Make sure SQLite is installed and properly set up on your machine.
-Installing
+
+ * Dart SDK: Ensure you have the Dart SDK installed on your machine. To install Dart, follow the instructions on the official Dart website.
+ * SQLite: This project uses SQLite for storing chat history. Make sure SQLite is installed and properly set up on your machine.
+
+### Installing
+
 Clone the repository to your local machine:
 
 ```bash
@@ -43,7 +47,7 @@ docker build -t my-dart-server -f docker/Dockerfile .
 Then, run the Docker container:
 
 ```bash
-docker run -d -p 8080:8080 -p 8081:8081 --name my-dart-server-app my-dart-server
+docker run -d -p 9000:9000 -p 9001:9001 --name my-dart-server-app my-dart-server
 ```
 
 This will start the servers inside a Docker container.
