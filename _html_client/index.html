@@ -50,7 +50,7 @@
                     historyElement.innerHTML = ''; // Clear existing history
                     data.reverse().forEach(msg => {
                         const msgElement = document.createElement('p');
-                        msgElement.textContent = `>> ${formatTimestamp(msg.timestamp)} ${msg.sender === 'server' ? 'SENT' : 'RECEIVED'}: ${msg.content}`;
+                        msgElement.textContent = `${msg.sender === 'server' ? '>>' : ''} ${formatTimestamp(msg.timestamp)} ${msg.sender === 'server' ? 'SENT' : 'RECEIVED'}: ${msg.content}`;
                         msgElement.className = msg.sender === 'server' ? 'sent-message' : 'received-message' ;
                         historyElement.appendChild(msgElement);
                     });
@@ -82,6 +82,9 @@
         <button onclick="sendMessage()">Send</button>
         <button onclick="getHistory()">Refresh History</button>
         <button onclick="disconnect()">Disconnect</button>
+        <a href="http://localhost:9001/downloadChatHistory" download="chatHistory.zip">
+            <button>Download Chat History</button>
+        </a>
         <div id="history"></div>
     </div>
 </body>

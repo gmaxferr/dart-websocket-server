@@ -64,9 +64,9 @@ class MyHttpServer {
     // Add chat history files for each device
     for (var deviceId in ids) {
       final messages =
-          (await database.getMessages(deviceId)).map((m) => m.toMap()).toList();
+          (await database.getMessages(deviceId)).map((m) => "${m.timestamp} ${m.sender == "server" ? "[SERVER] " : "[CHARGER]"} sent: '${m.content}'").toList();
       final fileName = '$deviceId.txt';
-      final fileContent = jsonEncode(messages);
+      final fileContent = messages.join("\n");
 
       // Add a file to the archive
       final file =
