@@ -16,6 +16,8 @@ RUN dart compile exe bin/server.dart -o bin/server
 # Use dart:stable for the runtime stage
 FROM dart:stable AS runtime
 
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
+
 COPY --from=build /app/bin/server /app/bin/
 COPY --from=build /app/pubspec.yaml /app/
 COPY --from=build /app/pubspec.lock /app/
