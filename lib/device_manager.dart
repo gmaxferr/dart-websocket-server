@@ -31,7 +31,6 @@ class DeviceManager {
   bool sendMessage(String deviceId, String message) {
     if (connectedDevices.containsKey(deviceId)) {
       connectedDevices[deviceId]?.add(message);
-      database.storeMessage(deviceId, message, 'API');
       return true;
     } else {
       // Device not connected or does not exist.

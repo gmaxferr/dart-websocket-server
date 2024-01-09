@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Server Communication</title>
+    <style>
+        .sent-message {
+            color: blue;
+        }
+        .received-message {
+            color: green;
+        }
+    </style>
+    <script>
+        let currentDeviceId = null;
+        let intervalId = null;
+
+        function connectToDevice() {
+            currentDeviceId = document.getElementById('deviceId').value;
+            if (currentDeviceId) {
+                getHistory();
+                document.getElementById('messageControls').style.display = 'block';
+                document.getElementById('connectControls').style.display = 'none';
+                intervalId = setInterval(getHistory, 5000); // Refresh history every 5 seconds
+            } else {
+                alert('Please enter a Station ID.');
+            }
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            fetch(`http://localhost:9001/sendMessage/${currentDeviceId}`, {
+                method: 'POST',
+                body: message
+            }).then(response => {
+                if (response.ok) {
+                    getHistory();
+                    document.getElementById('message').value = ''; // Clear message input
+                } else {
+                    alert('Error sending message.');
+                }
+            });
+        }
+
+        function getHistory() {
+            fetch(`http://localhost:9001/getHistory/${currentDeviceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const historyElement = document.getElementById('history');
+                    historyElement.innerHTML = ''; // Clear existing history
+                    data.reverse().forEach(msg => {
+                        const msgElement = document.createElement('p');
+                        msgElement.textContent = `>> ${formatTimestamp(msg.timestamp)} ${msg.sender === 'server' ? 'SENT' : 'RECEIVED'}: ${msg.content}`;
+                        msgElement.className = msg.sender === 'server' ? 'sent-message' : 'received-message' ;
+                        historyElement.appendChild(msgElement);
+                    });
+                });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+        }
+
+        function disconnect() {
+            clearInterval(intervalId);
+            currentDeviceId = null;
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('messageControls').style.display = 'none';
+            document.getElementById('connectControls').style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <div id="connectControls">
+        <input type="text" id="deviceId" placeholder="Enter Station ID" />
+        <button onclick="connectToDevice()">Connect</button>
+    </div>
+
+    <div id="messageControls" style="display: none;">
+        <input type="text" id="message" placeholder="Your message" />
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="getHistory()">Refresh History</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <div id="history"></div>
+    </div>
+</body>
+</html>

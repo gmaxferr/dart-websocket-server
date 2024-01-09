@@ -40,7 +40,7 @@ class MyHttpServer {
     router.get('/getHistory/<deviceId>',
         (Request request, String deviceId) async {
       final messages =
-          (await database.getMessages(deviceId)).map((m) => m.toMap());
+          (await database.getMessages(deviceId)).map((m) => m.toMap()).toList();
       return Response.ok(jsonEncode(messages),
           headers: {'Content-Type': 'application/json'});
     });
@@ -64,7 +64,7 @@ class MyHttpServer {
     // Add chat history files for each device
     for (var deviceId in ids) {
       final messages =
-          (await database.getMessages(deviceId)).map((m) => m.toMap());
+          (await database.getMessages(deviceId)).map((m) => m.toMap()).toList();
       final fileName = '$deviceId.txt';
       final fileContent = jsonEncode(messages);
 
@@ -79,11 +79,34 @@ class MyHttpServer {
   }
 
   Future<void> start() async {
-    _server = await io.serve(handler, InternetAddress.anyIPv4, port);
+    _server = await io.serve(_corsHeadersMiddleware().addHandler(handler),
+        InternetAddress.anyIPv4, port);
     print('HTTP Server running on http://localhost:${_server.port}');
   }
 
   Future<void> stop() async {
     await _server.close();
   }
+}
+
+// Middleware for setting CORS headers
+Middleware _corsHeadersMiddleware() {
+  return createMiddleware(
+    requestHandler: (Request request) {
+      if (request.method == 'OPTIONS') {
+        return Response.ok('', headers: {
+          'Access-Control-Allow-Origin': '*', // Adjust as needed
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        });
+      }
+      return null;
+    },
+    responseHandler: (Response response) {
+      return response.change(headers: {
+        'Access-Control-Allow-Origin': '*', // Adjust as needed
+        // Add other headers as needed
+      });
+    },
+  );
 }

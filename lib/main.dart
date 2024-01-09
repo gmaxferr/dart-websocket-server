@@ -10,16 +10,28 @@ void main() async {
   final deviceManager = DeviceManager(database);
 
   // Retrieve ports from environment variables or use default values
-  final int websocketPort = int.tryParse(Platform.environment['WEBSOCKET_PORT'] ?? '') ?? 9000;
-  final int httpPort = int.tryParse(Platform.environment['HTTP_PORT'] ?? '') ?? 9001;
+  final int websocketPort =
+      int.tryParse(Platform.environment['WEBSOCKET_PORT'] ?? '') ?? 9000;
+  final int httpPort =
+      int.tryParse(Platform.environment['HTTP_PORT'] ?? '') ?? 9001;
 
   // Initialize and start the WebSocket server
-  final websocketServer = WebSocketServer(websocketPort, deviceManager, database);
-  await websocketServer.start();
+  final websocketServer =
+      WebSocketServer(websocketPort, deviceManager, database);
+  websocketServer.start();
 
   // Initialize and start the HTTP server
-  final httpServer = MyHttpServer(httpPort, deviceManager, database);
-  await httpServer.start();
+  try {
+    final httpServer = MyHttpServer(httpPort, deviceManager, database);
+    httpServer.start();
+  } catch (err, trace) {
+    print(err);
+    print(trace);
+    websocketServer.stop();
+    print("An error occured - all closed");
+    return;
+  }
 
-  print('Servers running. WebSocket on port $websocketPort and HTTP on port $httpPort.');
+  print(
+      'Servers running. WebSocket on port $websocketPort and HTTP on port $httpPort.');
 }

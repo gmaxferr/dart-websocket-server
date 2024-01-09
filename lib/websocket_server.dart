@@ -37,6 +37,11 @@ class WebSocketServer {
     }
   }
 
+  void stop(){
+    print("Stopping Websocket Server...");
+    _server.close(force: true);
+  }
+
   void handleConnection(WebSocket socket, String deviceId) {
     var isAdded = deviceManager.addDevice(deviceId, socket);
     if (!isAdded) {
