@@ -1,0 +1,32 @@
+name: dart_websocket_server
+description: A simple Dart WebSocket server for managing device connections and messages.
+version: 0.1.0
+environment:
+  sdk: '>=3.0.0 <5.0.0'
+
+dependencies:
+  # Core Dart packages
+  # async: ^2.11.0
+  # collection: ^1.18.0
+
+  # For setting up the WebSocket server
+  web_socket_channel: "2.4.0"
+
+  # For setting up the HTTP server
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+
+  # For archiving filed in a Zip
+  archive: ^3.4.10
+
+  # For data storage (choose a suitable package as per your needs)
+  # sqlite could be a choice for a lightweight local database
+  # or shared_preferences for a simple key-value storage
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  pedantic: ^1.11.0
+  test: ^1.16.0
+
+executables:
+  server: bin/server.dart
