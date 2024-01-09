@@ -54,6 +54,11 @@ class MyHttpServer {
       });
     });
 
+    router.post('/deleteDatabase', (Request request) async {
+      database.deleteAll();
+      return Response.ok('Database deleted!');
+    });
+
     return router;
   }
 

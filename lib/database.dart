@@ -17,13 +17,20 @@ class MyDatabase {
   }
 
   void storeMessage(String deviceId, String content, String sender) {
-    final statement = _db.prepare('INSERT INTO messages (deviceId, content, sender, timestamp) VALUES (?, ?, ?, ?)');
-    statement.execute([deviceId, content, sender, DateTime.now().toIso8601String()]);
+    final statement = _db.prepare(
+        'INSERT INTO messages (deviceId, content, sender, timestamp) VALUES (?, ?, ?, ?)');
+    statement
+        .execute([deviceId, content, sender, DateTime.now().toIso8601String()]);
     statement.dispose();
   }
 
+  void deleteAll() {
+    _db.execute('DELETE FROM messages');
+  }
+
   List<Message> getMessages(String deviceId) {
-    final result = _db.select('SELECT * FROM messages WHERE deviceId = ?', [deviceId]);
+    final result =
+        _db.select('SELECT * FROM messages WHERE deviceId = ?', [deviceId]);
     return result.map((row) => Message.fromMap(row)).toList();
   }
 
