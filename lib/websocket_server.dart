@@ -7,7 +7,7 @@ class WebSocketServer {
   late HttpServer _server;
   final int port;
   final DeviceManager deviceManager;
-  final Database database;
+  final MyDatabase database;
 
   WebSocketServer(this.port, this.deviceManager, this.database);
 
@@ -61,7 +61,7 @@ class WebSocketServer {
     print('Message from device $deviceId: $message');
 
     // Store the message in the database
-    await database.storeMessage(deviceId, message, deviceId);
+    database.storeMessage(deviceId, message, deviceId);
   }
 
   String? extractDeviceId(String path) {

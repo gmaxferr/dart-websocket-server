@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dart_websocket_server/database.dart';
 
 class DeviceManager {
-  final Database database;
+  final MyDatabase database;
   DeviceManager(this.database);
   Map<String, WebSocket> connectedDevices = {};
 
@@ -28,10 +28,10 @@ class DeviceManager {
   }
 
   // Sends a message to the device with the given deviceId. Returns true if the message was sent, false if the device is not connected.
-  Future<bool> sendMessage(String deviceId, String message) async {
+  bool sendMessage(String deviceId, String message) {
     if (connectedDevices.containsKey(deviceId)) {
       connectedDevices[deviceId]?.add(message);
-      await database.storeMessage(deviceId, message, 'API');
+      database.storeMessage(deviceId, message, 'API');
       return true;
     } else {
       // Device not connected or does not exist.

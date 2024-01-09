@@ -1,22 +1,29 @@
-
 class Message {
+  final int? id;
+  final String deviceId;
   final String content;
   final String sender;
-  final DateTime timestamp;
+  final String timestamp;
 
-  Message(this.content, this.sender, this.timestamp);
+  Message({this.id, required this.deviceId, required this.content, required this.sender, required this.timestamp});
 
-  Map<String, dynamic> toJson() => {
-        'content': content,
-        'sender': sender,
-        'timestamp': timestamp.toIso8601String(),
-      };
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'deviceId': deviceId,
+      'content': content,
+      'sender': sender,
+      'timestamp': timestamp
+    };
+  }
 
-  static Message fromJson(Map<String, dynamic> json) {
+  static Message fromMap(Map<String, dynamic> map) {
     return Message(
-      json['content'],
-      json['sender'],
-      DateTime.parse(json['timestamp']),
+      id: map['id'],
+      deviceId: map['deviceId'],
+      content: map['content'],
+      sender: map['sender'],
+      timestamp: map['timestamp'],
     );
   }
 }

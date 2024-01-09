@@ -6,7 +6,7 @@ import 'database.dart';
 
 void main() async {
   // Initialize shared instances of DeviceManager and Database
-  final database = Database();
+  final database = MyDatabase();
   final deviceManager = DeviceManager(database);
 
   // Retrieve ports from environment variables or use default values

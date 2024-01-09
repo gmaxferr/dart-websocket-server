@@ -1,44 +1,39 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:dart_websocket_server/models/message.dart';
+import 'package:sqlite3/sqlite3.dart';
 
-class Database {
-  static const String _messagesKey = 'messages';
-  late final SharedPreferences _prefs;
+class MyDatabase {
+  final Database _db = sqlite3.open('.database');
 
-  Database() {
-    _init();
+  MyDatabase() {
+    _db.execute('''
+      CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        deviceId TEXT,
+        content TEXT,
+        sender TEXT,
+        timestamp TEXT
+      );
+    ''');
   }
 
-  Future<void> _init() async {
-    _prefs = await SharedPreferences.getInstance();
+  void storeMessage(String deviceId, String content, String sender) {
+    final statement = _db.prepare('INSERT INTO messages (deviceId, content, sender, timestamp) VALUES (?, ?, ?, ?)');
+    statement.execute([deviceId, content, sender, DateTime.now().toIso8601String()]);
+    statement.dispose();
   }
 
-  Future<void> storeMessage(String deviceId, String content, String sender) async {
-    await _init(); // Ensure _prefs is initialized
-    final message = Message(content, sender, DateTime.now());
-    final messageJson = message.toJson();
-
-    // Load existing messages for this device
-    List<dynamic> deviceMessages = jsonDecode(_prefs.getString(deviceId) ?? '[]');
-    deviceMessages.add(messageJson);
-
-    // Store the updated message list
-    await _prefs.setString(deviceId, jsonEncode(deviceMessages));
-    print('Message stored for device $deviceId');
+  List<Message> getMessages(String deviceId) {
+    final result = _db.select('SELECT * FROM messages WHERE deviceId = ?', [deviceId]);
+    return result.map((row) => Message.fromMap(row)).toList();
   }
 
-  Future<List<Message>> getMessages(String deviceId) async {
-    await _init(); // Ensure _prefs is initialized
-    final messagesJson = jsonDecode(_prefs.getString(deviceId) ?? '[]') as List;
-    
-    return messagesJson.map((json) => Message.fromJson(json)).toList();
+  List<String> getAllDeviceIdsInDatabase() {
+    final result = _db.select('SELECT DISTINCT deviceId FROM messages');
+    return result.map((row) => row['deviceId'] as String).toList();
   }
 
-  Future<List<String>> getAllDeviceIdsInDatabase() async {
-    await _init(); // Ensure _prefs is initialized
-    Set<String> keys = _prefs.getKeys();
-
-    // Filter out non-deviceId keys if there are any
-    return keys.where((k) => k != _messagesKey).toList();
+  // Close the database
+  void close() {
+    _db.dispose();
   }
 }

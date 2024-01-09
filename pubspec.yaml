@@ -19,10 +19,10 @@ dependencies:
   # For archiving filed in a Zip
   archive: ^3.4.10
 
-  # For data storage (choose a suitable package as per your needs)
+  # For data storage
   # sqlite could be a choice for a lightweight local database
-  # or shared_preferences for a simple key-value storage
-  shared_preferences: ^2.2.2
+  sqlite3: ^2.3.0
+  ffi: ^2.1.0
 
 dev_dependencies:
   pedantic: ^1.11.0

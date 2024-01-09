@@ -10,7 +10,7 @@ import 'database.dart';
 
 class MyHttpServer {
   final DeviceManager deviceManager;
-  final Database database;
+  final MyDatabase database;
   final int port;
 
   late HttpServer _server;
@@ -40,7 +40,7 @@ class MyHttpServer {
     router.get('/getHistory/<deviceId>',
         (Request request, String deviceId) async {
       final messages =
-          (await database.getMessages(deviceId)).map((m) => m.toJson());
+          (await database.getMessages(deviceId)).map((m) => m.toMap());
       return Response.ok(jsonEncode(messages),
           headers: {'Content-Type': 'application/json'});
     });
@@ -64,7 +64,7 @@ class MyHttpServer {
     // Add chat history files for each device
     for (var deviceId in ids) {
       final messages =
-          (await database.getMessages(deviceId)).map((m) => m.toJson());
+          (await database.getMessages(deviceId)).map((m) => m.toMap());
       final fileName = '$deviceId.txt';
       final fileContent = jsonEncode(messages);
 
