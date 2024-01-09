@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  websocketserver:
+    image: gplmaxferr/dart-websocketserver:latest
+    ports:
+      - "9000:9000" # Map the WebSocket server port
+      - "9001:9001" # Map the HTTP server port
+    environment:
+      - WEBSOCKET_PORT=9000
+      - HTTP_PORT=9001
