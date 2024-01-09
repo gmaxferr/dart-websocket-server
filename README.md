@@ -41,7 +41,7 @@ This will start the WebSocket server and the HTTP server on their respective por
 To run the servers using Docker, first build the Docker image:
 
 ```bash
-docker build -t my-dart-server -f docker/Dockerfile .
+docker build -t my-dart-server .
 ```
 
 Then, run the Docker container:
@@ -51,6 +51,17 @@ docker run -d -p 9000:9000 -p 9001:9001 --name my-dart-server-app my-dart-server
 ```
 
 This will start the servers inside a Docker container.
+You can also use the docker-compose file to start the container.
+
+```shell
+docker-compose up -d
+```
+
+### Publish docker image to DockerHub
+
+```shell
+docker push gplmaxferr/dart-websocketserver
+```
 
 ## Usage
 
