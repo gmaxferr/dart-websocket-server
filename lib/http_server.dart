@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
+import 'package:dart_websocket_server/pages/aux.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:path/path.dart' as path;
+// import 'package:path/path.dart' as path;
 
 import 'device_manager.dart';
 import 'database.dart';
@@ -64,14 +65,15 @@ class MyHttpServer {
     // Route to serve index.html
      router.get('/simple-client', (Request request) async {
       // Adjusted path to match the new location of index.html
-      final indexPath = path.join(Directory.current.path, 'lib', 'pages', 'index.html');
-      final file = File(indexPath);
+      // final indexPath = path.join(Directory.current.path, 'lib', 'pages', 'index.html');
+      // final file = File(indexPath);
 
-      if (await file.exists()) {
-        return Response.ok(await file.readAsString(), headers: {'Content-Type': 'text/html'});
-      } else {
-        return Response.notFound('Page not found');
-      }
+      // if (await file.exists()) {
+        // return Response.ok(await file.readAsString(), headers: {'Content-Type': 'text/html'});
+      // } else {
+      //   return Response.notFound('Page not found');
+      // }
+        return Response.ok(htmlFileContent, headers: {'Content-Type': 'text/html'});
     });
 
     return router;

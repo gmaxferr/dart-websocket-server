@@ -5,7 +5,8 @@ FROM dart:stable AS build
 WORKDIR /app
 
 # Copy the entire project directory into the container
-COPY / /app
+# Adjusted the COPY command to ensure it works in all contexts
+COPY . /app/
 
 # Get dependencies
 RUN dart pub get
@@ -16,8 +17,10 @@ RUN dart compile exe bin/server.dart -o bin/server
 # Use dart:stable for the runtime stage
 FROM dart:stable AS runtime
 
+# Install SQLite
 RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
+# Copy the compiled server and pubspec files
 COPY --from=build /app/bin/server /app/bin/
 COPY --from=build /app/pubspec.yaml /app/
 COPY --from=build /app/pubspec.lock /app/
