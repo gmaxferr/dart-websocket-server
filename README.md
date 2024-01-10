@@ -1,4 +1,4 @@
-# MyWebSocketServer
+# Dart Websocket Server
 
 This project implements a Dart WebSocket server with an HTTP server for managing device connections, messages, and storing chat history in a SQLite database.
 
@@ -16,8 +16,8 @@ These instructions will get your copy of the project up and running on your loca
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/your-username/mywebsocketserver.git
-cd mywebsocketserver
+git clone https://github.com/gmaxferr/dart-websocket-server
+cd dart-websocket-server
 ```
 Fetch and get all dependencies:
 
@@ -41,7 +41,7 @@ This will start the WebSocket server and the HTTP server on their respective por
 To run the servers using Docker, first build the Docker image:
 
 ```bash
-docker build -t my-dart-server .
+docker build -t dev .
 ```
 
 Then, run the Docker container:
@@ -60,7 +60,9 @@ docker-compose up -d
 ### Publish docker image to DockerHub
 
 ```shell
-docker push gplmaxferr/dart-websocketserver
+docker build -t dev .
+docker docker tag dev gplmaxferr/dart-websocketserver:latest
+docker push gplmaxferr/dart-websocketserver:latest
 ```
 
 ## Usage
@@ -70,9 +72,12 @@ docker push gplmaxferr/dart-websocketserver
 Devices can connect to the WebSocket server at ws://localhost:<WEBSOCKET_PORT>/<deviceID>.
 
 ### HTTP Server Endpoints
-POST /sendMessage/<deviceId>: Send a message to a connected device.
-GET /getHistory/<deviceId>: Retrieve the message history for a specific device.
-GET /downloadChatHistory: Download a ZIP file containing chat histories of all devices.
+
+ * POST /sendMessage/<deviceId>: Send a message to a connected device.
+ * GET /getHistory/<deviceId>: Retrieve the message history for a specific device.
+ * GET /downloadChatHistory: Download a ZIP file containing chat histories of all devices.
+ * POST /deleteDatabase: Deletes all entries in the Messages table in SQLite.
+ * GET /simple-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger.
 
 
 ## Authors

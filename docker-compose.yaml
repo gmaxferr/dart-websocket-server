@@ -9,3 +9,9 @@ services:
     environment:
       - WEBSOCKET_PORT=9000
       - HTTP_PORT=9001
+    deploy:
+      mode: replicated
+      replicas: 1
+      update_config:
+        order: start-first
+
