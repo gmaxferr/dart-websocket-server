@@ -14,6 +14,8 @@ void main() async {
       int.tryParse(Platform.environment['WEBSOCKET_PORT'] ?? '') ?? 9000;
   final int httpPort =
       int.tryParse(Platform.environment['HTTP_PORT'] ?? '') ?? 9001;
+  final String httpSchema = Platform.environment['HTTP_SCHEMA'] ?? 'http';
+  final String hostname = Platform.environment['SERVER_HOST'] ?? '';
 
   // Initialize and start the WebSocket server
   final websocketServer =
@@ -22,7 +24,8 @@ void main() async {
 
   // Initialize and start the HTTP server
   try {
-    final httpServer = MyHttpServer(httpPort, deviceManager, database);
+    final httpServer =
+        MyHttpServer(httpSchema, hostname, httpPort, deviceManager, database);
     httpServer.start();
   } catch (err, trace) {
     print(err);

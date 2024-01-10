@@ -48,7 +48,7 @@ const htmlFileContent = '''
 
         function sendMessage() {
             const message = document.getElementById('message').value;
-            fetch(`http://localhost:9001/sendMessage/\${currentDeviceId}`, {
+            fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/sendMessage/\${currentDeviceId}`, {
                 method: 'POST',
                 body: message
             }).then(response => {
@@ -63,7 +63,7 @@ const htmlFileContent = '''
 
         function deleteDatabase() {
             if (confirm('Are you sure you want to delete the database?\\nThis will delete all chat history with ALL previous ev chargers.\\nThis action cannot be undone.')) {
-                fetch('http://localhost:9001/deleteDatabase', { method: 'POST' })
+                fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/deleteDatabase', { method: 'POST' })
                     .then(response => {
                         if (response.ok) {
                             alert('Database successfully deleted.');
@@ -88,7 +88,7 @@ const htmlFileContent = '''
         }
 
         function getHistory() {
-            fetch(`http://localhost:9001/getHistory/\${currentDeviceId}`)
+            fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getHistory/\${currentDeviceId}`)
                 .then(response => response.json())
                 .then(data => {
                     const historyElement = document.getElementById('history');
@@ -126,7 +126,7 @@ const htmlFileContent = '''
 
     <div id="messageControls" style="display: none;">
 
-        <a href="http://localhost:9001/downloadChatHistory" download="chatHistory.zip"><button>Download Chat History</button></a>
+        <a href="{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/downloadChatHistory" download="chatHistory.zip"><button>Download Chat History</button></a>
         <button onclick="deleteDatabase()">Delete ALL Database</button>
         </br>
         </br>

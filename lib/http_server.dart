@@ -5,7 +5,7 @@ import 'package:dart_websocket_server/pages/aux.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
-// import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as path;
 
 import 'device_manager.dart';
 import 'database.dart';
@@ -14,10 +14,13 @@ class MyHttpServer {
   final DeviceManager deviceManager;
   final MyDatabase database;
   final int port;
+  final String httpSchema;
+  final String hostname;
 
   late HttpServer _server;
 
-  MyHttpServer(this.port, this.deviceManager, this.database);
+  MyHttpServer(this.httpSchema, this.hostname, this.port, this.deviceManager,
+      this.database);
 
   Handler get handler {
     final router = Router();
@@ -61,19 +64,36 @@ class MyHttpServer {
       return Response.ok('Database deleted!');
     });
 
+    // Route to serve index.html
+    router.get('/simple-client', (Request request) async {
+      // Adjusted path to match the new location of index.html
+      final indexPath =
+          path.join(Directory.current.path, 'lib', 'pages', 'index.html');
+      final file = File(indexPath);
+
+      if (await file.exists()) {
+        var content = await file.readAsString();
+
+        // Inject environment variables into HTML
+        content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+        content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+        content = content.replaceAll('{{API_PORT}}', "$port");
+        return Response.ok(content, headers: {'Content-Type': 'text/html'});
+      } else {
+        return Response.notFound('Page not found');
+      }
+    });
 
     // Route to serve index.html
-     router.get('/simple-client', (Request request) async {
-      // Adjusted path to match the new location of index.html
-      // final indexPath = path.join(Directory.current.path, 'lib', 'pages', 'index.html');
-      // final file = File(indexPath);
+    router.get('/simple-client2', (Request request) async {
+      var content = htmlFileContent;
 
-      // if (await file.exists()) {
-        // return Response.ok(await file.readAsString(), headers: {'Content-Type': 'text/html'});
-      // } else {
-      //   return Response.notFound('Page not found');
-      // }
-        return Response.ok(htmlFileContent, headers: {'Content-Type': 'text/html'});
+      // Inject environment variables into HTML
+      content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+      content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+      content = content.replaceAll('{{API_PORT}}', "$port");
+
+      return Response.ok(content, headers: {'Content-Type': 'text/html'});
     });
 
     return router;
@@ -85,8 +105,10 @@ class MyHttpServer {
     final ids = await database.getAllDeviceIdsInDatabase();
     // Add chat history files for each device
     for (var deviceId in ids) {
-      final messages =
-          (await database.getMessages(deviceId)).map((m) => "${m.timestamp} ${m.sender == "server" ? "[SERVER] " : "[CHARGER]"} sent: '${m.content}'").toList();
+      final messages = (await database.getMessages(deviceId))
+          .map((m) =>
+              "${m.timestamp} ${m.sender == "server" ? "[SERVER] " : "[CHARGER]"} sent: '${m.content}'")
+          .toList();
       final fileName = '$deviceId.txt';
       final fileContent = messages.join("\n");
 
