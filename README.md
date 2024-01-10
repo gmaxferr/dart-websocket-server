@@ -27,6 +27,20 @@ dart pub get
 
 ## Running the Servers
 
+Before running the servers, you should be aware that some settings are configurable through setting environment variables (below are the default valuesm change depending on your needs):
+
+```bash
+    export WEBSOCKET_PORT=9000;
+    export HTTP_PORT=9001;
+    export HTTP_SCHEMA="http";
+    export SERVER_HOST="evcore.demo.glcharge.com";
+```
+
+ * **WEBSOCKET_PORT** - The port running the websocket server.
+ * **HTTP_PORT** - The port running the http server API.
+ * **HTTP_SCHEMA** - The schema for the HTTP API endpoints, needed to specify on the client (injected on _/simple-client_ endpoint).
+ * **SERVER_HOST** - The server hostname (could be an IP, or domain), currenlty is needed to specify on the client (injected on _/simple-client_ endpoint).
+
 ### Via Command Line
 
 To run the WebSocket and HTTP servers directly through the command line:
