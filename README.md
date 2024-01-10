@@ -75,7 +75,7 @@ docker-compose up -d
 
 ```shell
 docker build -t dev .
-docker docker tag dev gplmaxferr/dart-websocketserver:latest
+docker tag dev gplmaxferr/dart-websocketserver:latest
 docker push gplmaxferr/dart-websocketserver:latest
 ```
 
