@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
-import 'package:dart_websocket_server/pages/aux.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -85,16 +84,16 @@ class MyHttpServer {
     });
 
     // Route to serve index.html
-    router.get('/simple-client2', (Request request) async {
-      var content = htmlFileContent;
+    // router.get('/simple-client2', (Request request) async {
+    //   var content = htmlFileContent;
 
-      // Inject environment variables into HTML
-      content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
-      content = content.replaceAll('{{API_ENDPOINT}}', hostname);
-      content = content.replaceAll('{{API_PORT}}', "$port");
+    //   // Inject environment variables into HTML
+    //   content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+    //   content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+    //   content = content.replaceAll('{{API_PORT}}', "$port");
 
-      return Response.ok(content, headers: {'Content-Type': 'text/html'});
-    });
+    //   return Response.ok(content, headers: {'Content-Type': 'text/html'});
+    // });
 
     return router;
   }
