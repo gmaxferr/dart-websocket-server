@@ -14,8 +14,11 @@ void main() async {
       int.tryParse(Platform.environment['WEBSOCKET_PORT'] ?? '') ?? 9000;
   final int httpPort =
       int.tryParse(Platform.environment['HTTP_PORT'] ?? '') ?? 9001;
-  final String httpSchema = Platform.environment['HTTP_SCHEMA'] ?? 'http';
-  final String hostname = Platform.environment['SERVER_HOST'] ?? '';
+  final String _auxSchema = Platform.environment['HTTP_SCHEMA'] ?? '';
+  final String _auxHost = Platform.environment['SERVER_HOST'] ?? '';
+  final String httpSchema = _auxSchema.isEmpty ? 'http' : _auxSchema;
+  final String hostname =
+      _auxHost.isEmpty ? 'evcore.demo.glcharge.com' : _auxHost;
 
   // Initialize and start the WebSocket server
   final websocketServer =

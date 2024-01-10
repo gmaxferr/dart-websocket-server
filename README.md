@@ -74,9 +74,9 @@ docker-compose up -d
 ### Publish docker image to DockerHub
 
 ```shell
-docker build -t dev .
-docker tag dev gplmaxferr/dart-websocketserver:latest
-docker push gplmaxferr/dart-websocketserver:latest
+    docker build -t dev .
+    docker tag dev gplmaxferr/dart-websocketserver:latest
+    docker push gplmaxferr/dart-websocketserver:latest
 ```
 
 ## Usage
