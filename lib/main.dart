@@ -16,6 +16,7 @@ void main() async {
       int.tryParse(Platform.environment['HTTP_PORT'] ?? '') ?? 9001;
   final String _auxSchema = Platform.environment['HTTP_SCHEMA'] ?? '';
   final String _auxHost = Platform.environment['SERVER_HOST'] ?? '';
+  final bool noPort = (Platform.environment['SHOW_PORT'] ?? '') == "y";
   final String httpSchema = _auxSchema.isEmpty ? 'http' : _auxSchema;
   final String hostname =
       _auxHost.isEmpty ? 'evcore.demo.glcharge.com' : _auxHost;
@@ -28,7 +29,7 @@ void main() async {
   // Initialize and start the HTTP server
   try {
     final httpServer =
-        MyHttpServer(httpSchema, hostname, httpPort, deviceManager, database);
+        MyHttpServer(httpSchema, hostname, httpPort, deviceManager, database, noPort);
     httpServer.start();
   } catch (err, trace) {
     print(err);

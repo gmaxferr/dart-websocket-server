@@ -15,11 +15,12 @@ class MyHttpServer {
   final int port;
   final String httpSchema;
   final String hostname;
+  final bool noPortInAPI;
 
   late HttpServer _server;
 
   MyHttpServer(this.httpSchema, this.hostname, this.port, this.deviceManager,
-      this.database);
+      this.database, this.noPortInAPI);
 
   Handler get handler {
     final router = Router();
@@ -103,14 +104,19 @@ class MyHttpServer {
 
         // Inject environment variables into HTML
         content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
-        content = content.replaceAll('{{API_ENDPOINT}}', hostname);
-        content = content.replaceAll('{{API_PORT}}', "$port");
+        if (noPortInAPI) {
+          content =
+              content.replaceAll('{{API_ENDPOINT}}:{{API_PORT}}', hostname);
+        } else {
+          content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+          content = content.replaceAll('{{API_PORT}}', "$port");
+        }
         return Response.ok(content, headers: {'Content-Type': 'text/html'});
       } else {
         return Response.notFound('Page not found');
       }
     });
-    
+
     // Default route for handling non-existent routes
     router.all('/<ignored|.*>', (Request request) {
       final path = request.requestedUri.path;
