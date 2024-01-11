@@ -145,19 +145,23 @@
                         // msgElement.onclick = () => copyToClipboard(msg.content);
                         if (msg.sender !== 'server') {
                             if (msg.content.includes("Heartbeat")) {
-                                const replyButton = document.createElement('button');
-                                replyButton.textContent = 'Auto Reply';
-                                const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
-                                replyButton.onclick = () => autoReplyToHeartbeat(`[3,"${messageIdMatch}",{"currentTime":"$$time"}]`);
-                                msgElement.appendChild(replyButton);
+
+                                msgElement.onclick = () => {
+                                    const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
+                                    if (messageIdMatch) {
+                                        showReplyDialog(messageIdMatch[1], '{"currentTime":"$$time"}')
+                                    }
+                                };
+                            } else {
+
+                                msgElement.onclick = () => {
+                                    const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
+                                    if (messageIdMatch) {
+                                        showReplyDialog(messageIdMatch[1], '');
+                                    }
+                                };
                             }
 
-                            msgElement.onclick = () => {
-                                const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
-                                if (messageIdMatch) {
-                                    showReplyDialog(messageIdMatch[1]);
-                                }
-                            };
                         }
                         historyElement.appendChild(msgElement);
                     });
@@ -198,10 +202,11 @@
 
         let currentMessageId = '';
 
-        function showReplyDialog(messageId) {
+        function showReplyDialog(messageId, fieldText) {
             currentMessageId = messageId;
             document.getElementById('replyDialog').style.display = 'block';
             document.getElementById('replyMessageContent').textContent = `[3,"${currentMessageId}",<...>]`;
+            document.getElementById('replyText').value = fieldText;
         }
 
         function sendReply() {
