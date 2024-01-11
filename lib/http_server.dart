@@ -63,11 +63,19 @@ class MyHttpServer {
       return Response.ok('Database deleted!');
     });
 
+    router.get('/getAllClients', (Request request) async {
+      final zipFileBytes = await createAllClientsZip();
+      return Response.ok(zipFileBytes, headers: {
+        HttpHeaders.contentTypeHeader: 'application/zip',
+        HttpHeaders.contentDisposition: 'attachment; filename="all_clients.zip"'
+      });
+    });
+
     // Route to serve index.html
     router.get('/simple-client', (Request request) async {
       // Adjusted path to match the new location of index.html
-      final indexPath =
-          path.join(Directory.current.path, 'lib', 'pages', 'simple-client.html');
+      final indexPath = path.join(
+          Directory.current.path, 'lib', 'pages', 'simple-client.html');
       final file = File(indexPath);
 
       if (await file.exists()) {
@@ -103,7 +111,6 @@ class MyHttpServer {
       }
     });
 
-
     return router;
   }
 
@@ -124,6 +131,39 @@ class MyHttpServer {
       final file =
           ArchiveFile(fileName, fileContent.length, fileContent.codeUnits);
       archive.addFile(file);
+    }
+
+    // Encode the archive as a ZIP
+    return ZipEncoder().encode(archive) ?? [];
+  }
+
+  Future<List<int>> createAllClientsZip() async {
+    final archive = Archive();
+
+    // Define the path to the HTML directory
+    final htmlDirPath = path.join(Directory.current.path, 'lib', 'pages');
+    print(htmlDirPath);
+    final htmlDir = Directory(htmlDirPath);
+
+    // Check if the directory exists
+    if (await htmlDir.exists()) {
+      // List all HTML files
+      final List<FileSystemEntity> files = htmlDir.listSync();
+      for (var file in files) {
+        if (file is File && file.path.endsWith('.html')) {
+          final fileName = path.basename(file.path);
+          
+          var fileContent = await file.readAsString();
+          fileContent = fileContent.replaceAll('{{API_SCHEMA}}', httpSchema);
+          fileContent = fileContent.replaceAll('{{API_ENDPOINT}}', hostname);
+          fileContent = fileContent.replaceAll('{{API_PORT}}', "$port");
+
+          final fileBytes = utf8.encode(fileContent);
+
+          // Add the file to the archive
+          archive.addFile(ArchiveFile(fileName, fileBytes.length, fileBytes));
+        }
+      }
     }
 
     // Encode the archive as a ZIP
