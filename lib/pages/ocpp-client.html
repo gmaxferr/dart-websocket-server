@@ -144,6 +144,14 @@
                         msgElement.className = msg.sender === 'server' ? 'sent-message' : 'received-message';
                         // msgElement.onclick = () => copyToClipboard(msg.content);
                         if (msg.sender !== 'server') {
+                            if (msg.content.includes("Heartbeat")) {
+                                const replyButton = document.createElement('button');
+                                replyButton.textContent = 'Auto Reply';
+                                const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
+                                replyButton.onclick = () => autoReplyToHeartbeat(`[3,"${messageIdMatch}",{"currentTime":"$$time"}]`);
+                                msgElement.appendChild(replyButton);
+                            }
+
                             msgElement.onclick = () => {
                                 const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
                                 if (messageIdMatch) {
@@ -202,6 +210,25 @@
 
             // Replace macros with their values
 
+            // Time Macro:
+            var currentDate = new Date();
+            var isoString = currentDate.toISOString();
+            const macroTime = isoString;
+            replyMessage = replyMessage.replace(/\$\$time/g, macroTime);
+
+            // const macroStatus = localStorage.getItem('macroStatus') || '';
+
+
+            // replyMessage = replyMessage.replace(/\$\$status/g, macroStatus);
+
+            sendReplyMessage(replyMessage);
+            // closeDialog();
+        }
+
+        function autoReplyToHeartbeat(message) {
+
+            // Replace macros with their values
+            var replyMessage = message;
             // Time Macro:
             var currentDate = new Date();
             var isoString = currentDate.toISOString();
