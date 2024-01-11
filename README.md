@@ -33,12 +33,14 @@ Before running the servers, you should be aware that some settings are configura
     export WEBSOCKET_PORT=9000;
     export HTTP_PORT=9001;
     export HTTP_SCHEMA="http";
+    export SHOW_PORT="y";
     export SERVER_HOST="evcore.demo.glcharge.com";
 ```
 
  * **WEBSOCKET_PORT** - The port running the websocket server.
  * **HTTP_PORT** - The port running the http server API.
  * **HTTP_SCHEMA** - The schema for the HTTP API endpoints, needed to specify on the client (injected on _/simple-client_ endpoint).
+ * **SHOW_PORT** - If in the client overrides hostname with or without including the Port. May be needed in some server configurations. Defaults to adding the port, to remove it, SHOW_PORT must have as value the letter "n" instead of "y".
  * **SERVER_HOST** - The server hostname (could be an IP, or domain), currenlty is needed to specify on the client (injected on _/simple-client_ endpoint).
 
 ### Via Command Line
