@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Server Communication</title>
+    <style>
+        .sent-message,
+        .received-message {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sent-message:hover,
+        .received-message:hover {
+            background-color: #f0f0f0;
+        }
+
+        .sent-message {
+            color: blue;
+        }
+
+        .received-message {
+            color: green;
+        }
+
+        #replyDialog {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+        }
+
+        #macroDialog {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+        }
+    </style>
+    <script>
+        let currentDeviceId = null;
+        let intervalId = null;
+
+        function connectToDevice() {
+            currentDeviceId = document.getElementById('deviceId').value;
+            if (currentDeviceId) {
+                getHistory();
+                document.getElementById('title').style.display = 'block';
+                document.getElementById('title').textContent = "Connected to '" + currentDeviceId + "'";
+                document.getElementById('messageControls').style.display = 'block';
+                document.getElementById('connectControls').style.display = 'none';
+                intervalId = setInterval(getHistory, 5000); // Refresh history every 5 seconds
+            } else {
+                alert('Please enter a Station ID.');
+            }
+        }
+        function generateRandomString(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+        function sendMessage() {
+            var message = `[2, "${generateRandomString(10)}",${document.getElementById('message').value}]`;
+            fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/sendMessage/${currentDeviceId}`, {
+                method: 'POST',
+                body: message
+            }).then(response => {
+                if (response.ok) {
+                    getHistory();
+                    document.getElementById('message').value = ''; // Clear message input
+                } else {
+                    alert('Error sending message.');
+                }
+            });
+        }
+
+        function sendReplyMessage(message) {
+            fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/sendMessage/${currentDeviceId}`, {
+                method: 'POST',
+                body: message
+            }).then(response => {
+                if (response.ok) {
+                    getHistory();
+                } else {
+                    alert('Error sending reply.');
+                }
+            });
+            closeReplyDialog();
+        }
+
+        function deleteDatabase() {
+            if (confirm('Are you sure you want to delete the database?\nThis will delete all chat history with ALL previous ev chargers.\nThis action cannot be undone.')) {
+                fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/deleteDatabase', { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Database successfully deleted.');
+                            disconnect(); // Reset the UI
+                        } else {
+                            alert('Failed to delete the database.');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the database.');
+                    });
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard: ' + text);
+            }, (err) => {
+                console.error('Error copying text to clipboard', err);
+            });
+        }
+
+        function getHistory() {
+            fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getHistory/${currentDeviceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const historyElement = document.getElementById('history');
+                    historyElement.innerHTML = ''; // Clear existing history
+                    data.reverse().forEach(msg => {
+                        const msgElement = document.createElement('p');
+                        msgElement.textContent = `${msg.sender === 'server' ? '>>' : ''} ${formatTimestamp(msg.timestamp)} ${msg.sender === 'server' ? 'SENT' : 'RECEIVED'}: ${msg.content}`;
+                        msgElement.className = msg.sender === 'server' ? 'sent-message' : 'received-message';
+                        // msgElement.onclick = () => copyToClipboard(msg.content);
+                        if (msg.sender !== 'server') {
+                            msgElement.onclick = () => {
+                                const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
+                                if (messageIdMatch) {
+                                    showReplyDialog(messageIdMatch[1]);
+                                }
+                            };
+                        }
+                        historyElement.appendChild(msgElement);
+                    });
+                });
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+        }
+
+        function disconnect() {
+            clearInterval(intervalId);
+            currentDeviceId = null;
+            document.getElementById('history').innerHTML = '';
+            document.getElementById('messageControls').style.display = 'none';
+            document.getElementById('connectControls').style.display = 'block';
+        }
+
+        function showMacroDialog() {
+            // Load existing macro values
+            var currentDate = new Date();
+            var isoString = currentDate.toISOString();
+            document.getElementById('macroTime').value = isoString;
+            // document.getElementById('macroStatus').value = localStorage.getItem('macroStatus') || '';
+            document.getElementById('macroDialog').style.display = 'block';
+        }
+
+        function saveMacros() {
+            localStorage.setItem('macroTime', document.getElementById('macroTime').value);
+            // localStorage.setItem('macroStatus', document.getElementById('macroStatus').value);
+            closeMacroDialog();
+        }
+
+        function closeMacroDialog() {
+            document.getElementById('macroDialog').style.display = 'none';
+        }
+
+        let currentMessageId = '';
+
+        function showReplyDialog(messageId) {
+            currentMessageId = messageId;
+            document.getElementById('replyDialog').style.display = 'block';
+            document.getElementById('replyMessageContent').textContent = `[3,"${currentMessageId}",<...>]`;
+        }
+
+        function sendReply() {
+            const replyText = document.getElementById('replyText').value;
+            let replyMessage = `[3,"${currentMessageId}",${replyText}]`;
+
+            // Replace macros with their values
+
+            // Time Macro:
+            var currentDate = new Date();
+            var isoString = currentDate.toISOString();
+            const macroTime = isoString;
+            replyMessage = replyMessage.replace(/\$\$time/g, macroTime);
+
+            // const macroStatus = localStorage.getItem('macroStatus') || '';
+
+
+            // replyMessage = replyMessage.replace(/\$\$status/g, macroStatus);
+
+            sendReplyMessage(replyMessage);
+            // closeDialog();
+        }
+
+        function closeReplyDialog() {
+            document.getElementById('replyDialog').style.display = 'none';
+            document.getElementById('replyText').value = ''; // Clear the textarea
+        }
+    </script>
+</head>
+
+<body>
+    <div id="connectControls">
+        <input type="text" id="deviceId" placeholder="Enter Station ID" />
+        <button onclick="connectToDevice()">Connect</button>
+    </div>
+
+    <div id="messageControls" style="display: none;">
+
+        <a href="{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/downloadChatHistory"
+            download="chatHistory.zip"><button>Download Chat History</button></a>
+        <button onclick="deleteDatabase()">Delete ALL Database</button>
+        </br>
+        </br>
+        <button onclick="showMacroDialog()">Set Macros</button>
+        </br>
+        </br>
+        <span id="title" style="font-size: 18px;font-weight: bold;"></span>
+        </br>
+        <span>Format will be: [3, "aRandomId",..your content..]</span>
+        <input type="text" id="message" placeholder="Your message" />
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="disconnect()">Disconnect</button>
+        </br>
+        </br>
+        <button onclick="getHistory()">Refresh History</button>
+
+        <!-- Reply Dialog -->
+        <div id="replyDialog" style="display: none;">
+            <h3>Reply to</h3>
+            </br>
+            <p id="replyMessageContent"></p>
+            </br>
+            <textarea id="replyText" placeholder="Enter your reply content here."></textarea>
+            </br>
+            <button onclick="sendReply()">Send Reply</button>
+            <button onclick="closeReplyDialog()">Close</button>
+        </div>
+        <div id="macroDialog" style="display: none;">
+            <h3>Set Macros</h3>
+            <div>
+                <label>Current Time (this value may be updated when replying)</label>
+                <input type="text" id="macroTime" placeholder="Enter time value">
+            </div>
+            <!-- <div>
+                <label>Status:</label>
+                <input type="text" id="macroStatus" placeholder="Enter status value">
+            </div> -->
+            <button onclick="saveMacros()">Save Macros</button>
+            <button onclick="closeMacroDialog()">Close</button>
+        </div>
+
+        <div id="history"></div>
+    </div>
+</body>
+
+</html>

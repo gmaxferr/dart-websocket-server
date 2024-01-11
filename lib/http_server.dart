@@ -67,7 +67,7 @@ class MyHttpServer {
     router.get('/simple-client', (Request request) async {
       // Adjusted path to match the new location of index.html
       final indexPath =
-          path.join(Directory.current.path, 'lib', 'pages', 'index.html');
+          path.join(Directory.current.path, 'lib', 'pages', 'simple-client.html');
       final file = File(indexPath);
 
       if (await file.exists()) {
@@ -84,16 +84,25 @@ class MyHttpServer {
     });
 
     // Route to serve index.html
-    // router.get('/simple-client2', (Request request) async {
-    //   var content = htmlFileContent;
+    router.get('/ocpp-client', (Request request) async {
+      // Adjusted path to match the new location of index.html
+      final indexPath =
+          path.join(Directory.current.path, 'lib', 'pages', 'ocpp-client.html');
+      final file = File(indexPath);
 
-    //   // Inject environment variables into HTML
-    //   content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
-    //   content = content.replaceAll('{{API_ENDPOINT}}', hostname);
-    //   content = content.replaceAll('{{API_PORT}}', "$port");
+      if (await file.exists()) {
+        var content = await file.readAsString();
 
-    //   return Response.ok(content, headers: {'Content-Type': 'text/html'});
-    // });
+        // Inject environment variables into HTML
+        content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+        content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+        content = content.replaceAll('{{API_PORT}}', "$port");
+        return Response.ok(content, headers: {'Content-Type': 'text/html'});
+      } else {
+        return Response.notFound('Page not found');
+      }
+    });
+
 
     return router;
   }
