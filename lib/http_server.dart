@@ -110,7 +110,12 @@ class MyHttpServer {
         return Response.notFound('Page not found');
       }
     });
-
+    
+    // Default route for handling non-existent routes
+    router.all('/<ignored|.*>', (Request request) {
+      final path = request.requestedUri.path;
+      return Response.notFound('Route not found ($path)');
+    });
     return router;
   }
 
@@ -152,7 +157,7 @@ class MyHttpServer {
       for (var file in files) {
         if (file is File && file.path.endsWith('.html')) {
           final fileName = path.basename(file.path);
-          
+
           var fileContent = await file.readAsString();
           fileContent = fileContent.replaceAll('{{API_SCHEMA}}', httpSchema);
           fileContent = fileContent.replaceAll('{{API_ENDPOINT}}', hostname);
