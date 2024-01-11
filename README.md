@@ -91,8 +91,9 @@ Devices can connect to the WebSocket server at ws://localhost:<WEBSOCKET_PORT>/<
  * GET /getHistory/<deviceId>: Retrieve the message history for a specific device.
  * GET /downloadChatHistory: Download a ZIP file containing chat histories of all devices.
  * POST /deleteDatabase: Deletes all entries in the Messages table in SQLite.
- * GET /simple-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger.
-
+ * GET /simple-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger. This client has no business login included.
+ * GET /ocpp-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger. This client uses minimal OCPP login the frontend to facilitate sending messages and replies to messages.
+ * GET /getAllClients: Returns a ZIP file containing all the clients (*.html files), in this way, clients can be fetched an run on the local machine to avoid SSL errors when SSL is not configured.
 
 ## Authors
 
