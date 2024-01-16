@@ -50,6 +50,50 @@
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
             z-index: 1001;
         }
+
+        #acceptRejectDialog {
+            /* Dialog styling */
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        #acceptRejectDialog button {
+            /* Button styling */
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #acceptRejectDialog {
+            /* Dialog styling */
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        #acceptRejectDialog button {
+            /* Button styling */
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
     </style>
     <script>
         let currentDeviceId = null;
@@ -78,7 +122,12 @@
             return result;
         }
         function sendMessage() {
-            var message = `[2, "${generateRandomString(10)}",${document.getElementById('message').value}]`;
+            let msg = document.getElementById('message').value;
+            let finalMsg = "{}";
+            if(msg !== ''){
+                finalMsg = msg;
+            }
+            var message = `[2, "${generateRandomString(10)}",${finalMsg}]`;
             fetch(`{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/sendMessage/${currentDeviceId}`, {
                 method: 'POST',
                 body: message
@@ -145,16 +194,26 @@
                         // msgElement.onclick = () => copyToClipboard(msg.content);
                         if (msg.sender !== 'server') {
                             if (msg.content.includes("Heartbeat")) {
-
                                 msgElement.onclick = () => {
+                                    console.log(msg.content);
                                     const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
                                     if (messageIdMatch) {
+                                        console.log('{"currentTime":"$$time"}');
                                         showReplyDialog(messageIdMatch[1], '{"currentTime":"$$time"}')
                                     }
                                 };
-                            } else {
-
+                            } else if (msg.content.includes("BootNotification")) {
                                 msgElement.onclick = () => {
+                                    console.log(msg.content);
+                                    const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
+                                    if (messageIdMatch) {
+                                        showReplyDialogAcceptReject('BootNotification', messageIdMatch[1], '{"currentTime": "$$time", "interval": 900, "status": "Accepted"}', '{"currentTime": "$$time", "interval": 900, "status": "Rejected"}')
+                                    }
+                                };
+                            } else {
+                                console.log('ELSE');
+                                msgElement.onclick = () => {
+                                    console.log(msg.content);
                                     const messageIdMatch = msgElement.textContent.match(/\[., ?"([^"]+)",/);
                                     if (messageIdMatch) {
                                         showReplyDialog(messageIdMatch[1], '');
@@ -209,9 +268,35 @@
             document.getElementById('replyText').value = fieldText;
         }
 
+        function showReplyDialogAcceptReject(title, messageId, acceptMessage, rejectMessage) {
+            document.getElementById('dialogAccRejTitle').textContent = title;
+            const dialog = document.getElementById('acceptRejectDialog');
+            const acceptButton = document.getElementById('acceptButton');
+            const rejectButton = document.getElementById('rejectButton');
+
+            // Configure and show the dialog
+            dialog.style.display = 'block';
+
+            // Configure Accept button
+            acceptButton.onclick = () => {
+                autoReplyToCustom(messageId,acceptMessage);
+                dialog.style.display = 'none';
+            };
+
+            // Configure Reject button
+            rejectButton.onclick = () => {
+                autoReplyToCustom(messageId, rejectMessage);
+                dialog.style.display = 'none';
+            };
+        }
+
         function sendReply() {
             const replyText = document.getElementById('replyText').value;
-            let replyMessage = `[3,"${currentMessageId}",${replyText}]`;
+            
+            let replyMessage = `[3,"${currentMessageId}",{}]`;
+            if (replyText !== '') {
+                replyMessage = `[3,"${currentMessageId}",${replyText}]`;
+            }
 
             // Replace macros with their values
 
@@ -230,10 +315,14 @@
             // closeDialog();
         }
 
-        function autoReplyToHeartbeat(message) {
+        function autoReplyToCustom(msgId, message) {
 
             // Replace macros with their values
-            var replyMessage = message;
+            let replyMessage = `[3,"${msgId}",{}]`;
+            if (message !== '') {
+                replyMessage = `[3,"${msgId}",${message}]`;
+            }
+
             // Time Macro:
             var currentDate = new Date();
             var isoString = currentDate.toISOString();
@@ -281,7 +370,12 @@
         </br>
         </br>
         <button onclick="getHistory()">Refresh History</button>
-
+        <!-- Accept/Reject Dialog Container -->
+        <div id="acceptRejectDialog" style="display: none;">
+            <h2 id="dialogAccRejTitle"></h2>
+            <button id="acceptButton">Accept</button>
+            <button id="rejectButton">Reject</button>
+        </div>
         <!-- Reply Dialog -->
         <div id="replyDialog" style="display: none;">
             <h3>Reply to</h3>
