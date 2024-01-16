@@ -29,4 +29,8 @@ COPY --from=build /app/pubspec.lock /app/
 WORKDIR /app
 RUN dart pub get
 
+# Capture the current Git commit ID
+ARG GIT_COMMIT_ID=unknown
+ENV GIT_COMMIT_ID=${GIT_COMMIT_ID}
+
 CMD ["./bin/server"]

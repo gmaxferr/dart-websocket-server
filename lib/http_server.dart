@@ -88,6 +88,12 @@ class MyHttpServer {
       return Response.ok('Server will restart in order to update...');
     });
 
+    // Route to return the server version (Git commit ID)
+    router.get('/server-version', (Request request) {
+      final serverVersion = Platform.environment['GIT_COMMIT_ID'] ?? 'unknown';
+      return Response.ok('$serverVersion');
+    });
+
     // Route to serve index.html
     router.get('/simple-client', (Request request) async {
       // Adjusted path to match the new location of index.html

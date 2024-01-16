@@ -10,6 +10,9 @@ SCREEN_NAME_FILE="lib/screen_name.txt"
 cd $GIT_REPO_PATH
 git pull
 
+GIT_COMMIT_ID_FETCHED=$(git rev-parse HEAD)
+export GIT_COMMIT_ID="${GIT_COMMIT_ID_FETCHED}"
+
 # Start the new server in a new screen session with a new name
 NEW_SCREEN_NAME="${SCREEN_NAME}_$(date +%s)" # Unique name using a timestamp
 # echo $NEW_SCREEN_NAME >> $SCREEN_NAME_FILE

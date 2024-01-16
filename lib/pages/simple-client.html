@@ -26,6 +26,21 @@
         .received-message {
             color: green;
         }
+
+        #updateDialog {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
     </style>
     <script>
         let currentDeviceId = null;
@@ -44,6 +59,29 @@
                 alert('Please enter a Station ID.');
             }
         }
+
+        let currentVersion = null;
+
+        function checkServerVersion() {
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/server-version')
+                .then(response => response.text())
+                .then(version => {
+                    if (currentVersion && version
+                        !== currentVersion) {
+                        showUpdateDialog();
+                    }
+                    currentVersion = version;
+                })
+                .catch(error => console.error('Error fetching server version:', error));
+        }
+
+        function showUpdateDialog() {
+            const dialog = document.getElementById('updateDialog');
+            dialog.style.display = 'block';
+        }
+
+        // Periodically check server version every 3 seconds
+        setInterval(checkServerVersion, 3000);
 
         function sendMessage() {
             const message = document.getElementById('message').value;
@@ -122,10 +160,15 @@
         <input type="text" id="deviceId" placeholder="Enter Station ID" />
         <button onclick="connectToDevice()">Connect</button>
     </div>
+    <div id="updateDialog" style="display: none;">
+        <p>The server was updated</p>
+        <button onclick="location.reload(true)">Refresh</button>
+    </div>
 
     <div id="messageControls" style="display: none;">
 
-        <a href="{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/downloadChatHistory" download="chatHistory.zip"><button>Download Chat History</button></a>
+        <a href="{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/downloadChatHistory"
+            download="chatHistory.zip"><button>Download Chat History</button></a>
         <button onclick="deleteDatabase()">Delete ALL Database</button>
         </br>
         </br>
