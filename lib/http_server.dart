@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:archive/archive_io.dart';
+import 'package:dart_websocket_server/main.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -70,6 +72,20 @@ class MyHttpServer {
         HttpHeaders.contentTypeHeader: 'application/zip',
         HttpHeaders.contentDisposition: 'attachment; filename="all_clients.zip"'
       });
+    });
+
+    router.get('/force-update', (Request request) async {
+      // After sending the response, schedule the restart
+      Timer(Duration(seconds: 1), () async {
+        MultiServerHandler.stopServerGracefully(onDone: () async {
+          print("running `restart_server.sh`");
+          await Process.run('/bin/bash', ['lib/restart_server.sh']);
+          print("Waiting 10s until complete shutdown");
+          await Future.delayed(Duration(seconds: 10));
+        });
+      });
+      // Respond with 200 OK
+      return Response.ok('Server will restart in order to update...');
     });
 
     // Route to serve index.html
@@ -187,8 +203,8 @@ class MyHttpServer {
     print('HTTP Server running on http://localhost:${_server.port}');
   }
 
-  Future<void> stop() async {
-    await _server.close();
+  Future<void> stop({bool force = false}) async {
+    await _server.close(force: force);
   }
 }
 
