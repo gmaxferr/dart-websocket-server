@@ -100,7 +100,8 @@ Devices can connect to the WebSocket server at ws://localhost:<WEBSOCKET_PORT>/<
  * GET /force-update: Forces the server to stop, make a git pull, and then start again.
  
  
- 
+
+
 
 ## Authors
 
