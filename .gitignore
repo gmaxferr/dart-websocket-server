@@ -1,7 +1,7 @@
 
 #sqlite database
 .database
-
+lib/screen_name.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/dart
 # Edit at https://www.toptal.com/developers/gitignore?templates=dart
