@@ -13,3 +13,16 @@ if [ -f "$SERVER_NAME_FILE" ]; then
 else
     echo "Error: $SERVER_NAME_FILE does not exist."
 fi
+
+# Find the PID of the server process
+PID=$(ps aux | grep 'bin/server.dart' | grep -v 'grep' | awk '{print $2}')
+
+# Check if the PID was found
+if [ -z "$PID" ]; then
+    echo "Server process not found."
+    exit 1
+fi
+
+# Kill the server process
+kill -9 $PID
+echo "Server process terminated."
