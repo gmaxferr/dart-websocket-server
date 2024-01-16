@@ -99,8 +99,9 @@ Devices can connect to the WebSocket server at ws://localhost:<WEBSOCKET_PORT>/<
  * GET /server-version: Returns the server's current git commit id.
  * GET /force-update: Forces the server to stop, make a git pull, and then start again.
  
-
  
+ 
+
 ## Authors
 
  * Guilherme Ferreira - guilherme.ferreira@iskraemeco.com
