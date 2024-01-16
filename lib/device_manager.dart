@@ -11,7 +11,10 @@ class DeviceManager {
   bool addDevice(String deviceId, WebSocket socket) {
     if (connectedDevices.containsKey(deviceId)) {
       // Device ID is already in use.
-      return false;
+      connectedDevices[deviceId]!.close();
+      connectedDevices[deviceId] = socket;
+      print('Device $deviceId connected.');
+      return true;
     } else {
       connectedDevices[deviceId] = socket;
       print('Device $deviceId connected.');
