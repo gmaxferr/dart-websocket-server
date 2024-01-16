@@ -96,7 +96,9 @@ Devices can connect to the WebSocket server at ws://localhost:<WEBSOCKET_PORT>/<
  * GET /simple-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger. This client has no business login included.
  * GET /ocpp-client: Returns a HTML+JS client that uses the endpoints above to communicate with a Charger. This client uses minimal OCPP login the frontend to facilitate sending messages and replies to messages.
  * GET /getAllClients: Returns a ZIP file containing all the clients (*.html files), in this way, clients can be fetched an run on the local machine to avoid SSL errors when SSL is not configured.
-
+ * GET /server-version: Returns the server's current git commit id.
+ * GET /force-update: Forces the server to stop, make a git pull, and then start again.
+ 
 ## Authors
 
  * Guilherme Ferreira - guilherme.ferreira@iskraemeco.com
