@@ -74,6 +74,16 @@ class MyHttpServer {
       });
     });
 
+    router.get('/device-status/<deviceId>',
+        (Request request, String deviceId) async {
+      final connectedIds = deviceManager.getConnectedDeviceIds();
+      if (connectedIds.contains(deviceId)) {
+        return Response.ok("Device Connected");
+      } else {
+        return Response.notFound("Device not connected");
+      }
+    });
+
     router.get('/force-update', (Request request) async {
       // After sending the response, schedule the restart
       Timer(Duration(seconds: 1), () async {

@@ -127,6 +127,21 @@
                 })
                 .catch(error => console.error('Error fetching server version:', error));
         }
+        
+        function checkDeviceConnection() {
+            if(currentDeviceId === null) return;
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/device-status/' + currentDeviceId)
+                .then(response => {
+                    if(response.status == 200){
+                        document.getElementById('deviceStatus').textContent = 'Charger is Connected';
+                        document.getElementById('deviceStatus').style.color = 'green';
+                    }else{
+                        document.getElementById('deviceStatus').textContent = 'Charger is Disconnected';
+                        document.getElementById('deviceStatus').style.color = 'red';
+                    }
+                })
+                .catch(error => console.error('Error fetching server version:', error));
+        }
 
         function showUpdateDialog() {
             const dialog = document.getElementById('updateDialog');
@@ -135,6 +150,9 @@
 
         // Periodically check server version every 3 seconds
         setInterval(checkServerVersion, 3000);
+
+        // Periodically check device connection every 2 seconds
+        setInterval(checkDeviceConnection, 2000);
 
         function connectToDevice() {
             currentDeviceId = document.getElementById('deviceId').value;
@@ -409,6 +427,7 @@
         <input type="text" id="message" placeholder="Your message" />
         <button onclick="sendMessage()">Send</button>
         <button onclick="disconnect()">Disconnect</button>
+          <span id="deviceStatus" style="font-size: 16px; font-weight: bold;"></span>
         </br>
         </br>
         <button onclick="getHistory()">Refresh History</button>
