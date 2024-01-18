@@ -16,13 +16,13 @@ These instructions will get your copy of the project up and running on your loca
 Clone the repository to your local machine:
 
 ```bash
-git clone https://github.com/gmaxferr/dart-websocket-server
-cd dart-websocket-server
+    git clone https://github.com/gmaxferr/dart-websocket-server
+    cd dart-websocket-server
 ```
 Fetch and get all dependencies:
 
 ```bash
-dart pub get
+    dart pub get
 ```
 
 ## Running the Servers
@@ -48,7 +48,7 @@ Before running the servers, you should be aware that some settings are configura
 To run the WebSocket and HTTP servers directly through the command line:
 
 ```bash
-dart run bin/server.dart
+    dart run bin/server.dart
 ```
 
 This will start the WebSocket server and the HTTP server on their respective ports as configured in your application.
@@ -57,20 +57,20 @@ This will start the WebSocket server and the HTTP server on their respective por
 To run the servers using Docker, first build the Docker image:
 
 ```bash
-docker build -t dev .
+    docker build -t dev .
 ```
 
 Then, run the Docker container:
 
 ```bash
-docker run -d -p 9000:9000 -p 9001:9001 --name my-dart-server-app my-dart-server
+    docker run -d -p 9000:9000 -p 9001:9001 --name my-dart-server-app my-dart-server
 ```
 
 This will start the servers inside a Docker container.
 You can also use the docker-compose file to start the container.
 
 ```shell
-docker-compose up -d
+    docker-compose up -d
 ```
 
 ### Publish docker image to DockerHub

@@ -328,9 +328,15 @@
             const dialog = document.getElementById('acceptRejectDialog');
             const acceptButton = document.getElementById('acceptButton');
             const rejectButton = document.getElementById('rejectButton');
+            const closeButton = document.getElementById('closeButton');
 
             // Configure and show the dialog
             dialog.style.display = 'block';
+
+            // Configure Close button
+            closeButton.onclick = () => {
+                dialog.style.display = 'none';
+            };
 
             // Configure Accept button
             acceptButton.onclick = () => {
@@ -436,6 +442,7 @@
             <h2 id="dialogAccRejTitle"></h2>
             <button id="acceptButton">Accept</button>
             <button id="rejectButton">Reject</button>
+            <button id="closeButton">Close</button>
         </div>
         <!-- Reply Dialog -->
         <div id="replyDialog" style="display: none;">
