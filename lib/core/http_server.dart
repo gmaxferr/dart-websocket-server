@@ -157,11 +157,11 @@ class MyHttpServer {
     router.get('/testing-enabled', (Request request) async {
       if (this.testingManager == null) {
         return Response.ok(
-            'Testing Fetaure is not enables. Please check the Readme.md',
+            'Testing Features are not enabled. Please check the Readme.md',
             headers: {'Content-Type': 'application/json'});
       }
       return Response.ok(
-          'Testing Fetaure is enabled',
+          'Testing Features are enabled',
           headers: {'Content-Type': 'application/json'});
     });
 
