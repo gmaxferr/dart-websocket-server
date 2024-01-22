@@ -367,6 +367,37 @@
     </table>
 
     <!-- Dialogs and additional components here -->
+    <!-- Add Test Plan Button -->
+    <div class="container">
+        <button id="addTestPlanBtn" class="btn" onclick="openTestPlanCreationDialog()">Add Test Plan</button>
+    </div>
+
+    <!-- Test Plan Creation Modal -->
+    <div id="testPlanCreationModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTestPlanCreationDialog()">&times;</span>
+            <h2>Create Test Plan</h2>
+            <form id="testPlanForm">
+                <!-- Inputs for Test Plan details -->
+                <label for="testPlanName">Name:</label>
+                <input type="text" id="testPlanName" name="name"><br><br>
+
+                <label for="testPlanType">Type:</label>
+                <select id="testPlanType" name="type">
+                    <option value="sequential">Sequential</option>
+                    <option value="generic">Generic</option>
+                </select><br><br>
+
+                <!-- Container for adding Test Cases -->
+                <div id="testCasesContainer">
+                    <!-- Test Cases will be added here dynamically -->
+                </div>
+                <button type="button" onclick="addTestCaseInput()">Add Test Case</button><br><br>
+
+                <input type="submit" value="Create Test Plan">
+            </form>
+        </div>
+    </div>
 
     <!-- Macro Dialog Modal -->
     <div id="macroModal" class="modal">
