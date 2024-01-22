@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:dart_websocket_server/database.dart';
 
-import 'device_manager.dart';
+import 'package:dart_websocket_server/database/database.dart';
+import 'package:dart_websocket_server/device_management/device_manager.dart';
+
 
 class WebSocketServer {
   late HttpServer _server;

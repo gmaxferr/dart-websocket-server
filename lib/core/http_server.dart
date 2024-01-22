@@ -1,19 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:archive/archive_io.dart';
+import 'package:dart_websocket_server/database/database.dart';
+import 'package:dart_websocket_server/device_management/device_manager.dart';
 import 'package:dart_websocket_server/main.dart';
+import 'package:dart_websocket_server/testing/models/test_case.dart';
+import 'package:dart_websocket_server/testing/models/test_plan.dart';
+import 'package:dart_websocket_server/testing/testing_manager.dart';
+import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
-import 'package:path/path.dart' as path;
-
-import 'device_manager.dart';
-import 'database.dart';
 
 class MyHttpServer {
   final DeviceManager deviceManager;
   final MyDatabase database;
+  final TestingManager? testingManager;
   final int port;
   final String httpSchema;
   final String hostname;
@@ -22,7 +26,7 @@ class MyHttpServer {
   late HttpServer _server;
 
   MyHttpServer(this.httpSchema, this.hostname, this.port, this.deviceManager,
-      this.database, this.noPortInAPI);
+      this.database, this.noPortInAPI, this.testingManager);
 
   Handler get handler {
     final router = Router();
@@ -154,7 +158,88 @@ class MyHttpServer {
       final path = request.requestedUri.path;
       return Response.notFound('Route not found ($path)');
     });
+
+    _addTestingManagerEndpoints(router);
+
     return router;
+  }
+
+  void _addTestingManagerEndpoints(Router router) {
+    if (testingManager == null) return;
+    // Route to get a TestPlan by ID
+    router.get('/testPlan/<id>', (Request request, String id) async {
+      int testPlanId = int.parse(id);
+      TestPlan? testPlan = testingManager!.getTestPlanById(testPlanId);
+      if (testPlan != null) {
+        return Response.ok(jsonEncode(testPlan.toMap()),
+            headers: {'Content-Type': 'application/json'});
+      }
+      return Response.notFound('TestPlan not found',
+          headers: {'Content-Type': 'application/json'});
+    });
+
+    // Route to get all TestCases for a TestPlan
+    router.get('/testCases/<testPlanId>',
+        (Request request, String testPlanId) async {
+      try {
+        int id = int.parse(testPlanId);
+        var testCases = testingManager!.getTestCasesByTestPlanId(id);
+        return Response.ok(
+            jsonEncode(testCases.map((tc) => tc.toMap()).toList()),
+            headers: {'Content-Type': 'application/json'});
+      } catch (e) {
+        return Response.notFound('TestCases not found');
+      }
+    });
+
+    // Route to get TestPlan by status for a specific deviceId
+    router.get('/getTestPlanByStatus/<deviceId>/<status>',
+        (Request request, String deviceId, String status) async {
+      try {
+        var testPlans = testingManager!.getTestPlanByStatus(deviceId, status);
+        return Response.ok(
+            jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
+            headers: {'Content-Type': 'application/json'});
+      } catch (e) {
+        return Response.notFound('TestPlans not found for status $status');
+      }
+    });
+
+    // Route to get a TestCase by ID
+    router.get('/getTestCaseById/<id>', (Request request, String id) async {
+      int testCaseId = int.parse(id);
+      TestCase? testCase = testingManager!.getTestCaseById(testCaseId);
+      if (testCase != null) {
+        return Response.ok(jsonEncode(testCase.toMap()),
+            headers: {'Content-Type': 'application/json'});
+      }
+      return Response.notFound(jsonEncode(testCase!.toMap()),
+          headers: {'Content-Type': 'application/json'});
+    });
+
+    // Route to get TestPlans by a list of IDs
+    router.post('/getTestPlansByIds', (Request request) async {
+      try {
+        var ids = jsonDecode(await request.readAsString()) as List<dynamic>;
+        var testPlans = testingManager!.getTestPlansByIds(ids.cast<int>());
+        return Response.ok(
+            jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
+            headers: {'Content-Type': 'application/json'});
+      } catch (e) {
+        return Response.internalServerError(body: 'Error processing request');
+      }
+    });
+
+    // Route to get TestPlans by Device ID
+    router.get('/getTestPlansByDeviceId/<deviceId>',
+        (Request request, String deviceId) async {
+      var testPlans = testingManager!.getTestPlansByDeviceId(deviceId);
+      if (testPlans.isEmpty) {
+        return Response.notFound('TestPlans not found for deviceId $deviceId');
+      }
+      return Response.ok(jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
+          headers: {'Content-Type': 'application/json'});
+    });
   }
 
   Future<List<int>> createChatHistoryZip() async {

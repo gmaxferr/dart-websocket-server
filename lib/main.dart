@@ -1,16 +1,20 @@
 import 'dart:io';
-import 'websocket_server.dart';
-import 'http_server.dart';
-import 'device_manager.dart';
-import 'database.dart';
+
+import 'package:dart_websocket_server/core/http_server.dart';
+import 'package:dart_websocket_server/core/websocket_server.dart';
+import 'package:dart_websocket_server/database/database.dart';
+import 'package:dart_websocket_server/database/testing_database.dart';
+import 'package:dart_websocket_server/device_management/device_manager.dart';
+import 'package:dart_websocket_server/testing/testing_manager.dart';
 
 class MultiServerHandler {
   static late MyHttpServer httpServer;
   static late WebSocketServer wsServer;
   final MyDatabase database;
   final DeviceManager deviceManager;
+  final TestingManager? testingManager;
 
-  MultiServerHandler(this.deviceManager, this.database);
+  MultiServerHandler(this.deviceManager, this.database, this.testingManager);
 
   init() {
     // Retrieve ports from environment variables or use default values
@@ -31,8 +35,8 @@ class MultiServerHandler {
 
     // Initialize and start the HTTP server
     try {
-      httpServer = MyHttpServer(
-          httpSchema, hostname, httpPort, deviceManager, database, noPort);
+      httpServer = MyHttpServer(httpSchema, hostname, httpPort, deviceManager,
+          database, noPort, testingManager);
       httpServer.start();
     } catch (err, trace) {
       print(err);
@@ -61,9 +65,18 @@ class MultiServerHandler {
 
 void main() async {
   // Initialize shared instances of DeviceManager and Database
+  final bool disableTestingUseCases =
+      (Platform.environment['DISABLE_TESTING'] ?? '') == "n";
   final database = MyDatabase();
   final deviceManager = DeviceManager(database);
-  final handler = MultiServerHandler(deviceManager, database);
+
+  TestingManager? testingManager;
+  if (disableTestingUseCases) {
+    final testingDatabase = TestingDatabase();
+    testingManager =
+        TestingManager(database: testingDatabase, deviceManager: deviceManager);
+  }
+  final handler = MultiServerHandler(deviceManager, database, testingManager);
 
   handler.init();
 }

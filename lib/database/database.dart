@@ -1,4 +1,4 @@
-import 'package:dart_websocket_server/models/message.dart';
+import 'package:dart_websocket_server/core/models/message.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class MyDatabase {

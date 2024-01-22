@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:dart_websocket_server/database.dart';
+import 'package:dart_websocket_server/core/models/message.dart';
+import 'package:dart_websocket_server/database/database.dart';
 
 class DeviceManager {
   final MyDatabase database;
@@ -41,12 +42,25 @@ class DeviceManager {
     }
   }
 
+  String? getDeviceResponseTo(String deviceId, String msgId) {
+    String? response;
+    List<Message> messages = database.getMessages(deviceId);
+
+    messages = messages
+        .where((element) =>
+            element.content.contains(msgId) && element.sender == deviceId)
+        .toList();
+
+    response = messages.firstOrNull?.content;
+    return response;
+  }
+
   // Returns a list of currently connected device IDs.
   List<String> getConnectedDeviceIds() {
     return connectedDevices.keys.toList();
   }
 
-  bool isConnected(String deviceId){
+  bool isConnected(String deviceId) {
     return connectedDevices.containsKey(deviceId);
   }
 }
