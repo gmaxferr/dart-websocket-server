@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dart_websocket_server/testing/models/test_case.dart';
 import 'package:dart_websocket_server/testing/models/test_case_result.dart';
 import 'package:dart_websocket_server/testing/models/test_plan.dart';
@@ -56,6 +58,31 @@ class TestingDatabase {
       );
     ''');
   }
+// Add a new TestPlan to the database
+  void addTestPlan(TestPlan testPlan) {
+    _db.execute(
+        'INSERT INTO TestPlans (name, type, variables) VALUES (?, ?, ?)',
+        [testPlan.name, testPlan.type.name, jsonEncode(testPlan.variables)]);
+  }
+
+  // Add a new TestCase to the database
+  void addTestCase(int testPlanId, TestCase testCase) {
+    _db.execute(
+        'INSERT INTO TestCases (testPlanId, description, defaultMessage, validationPath, expectedValue, extractionMacro) VALUES (?, ?, ?, ?, ?, ?)',
+        [
+          testPlanId,
+          testCase.description,
+          testCase.defaultMessage,
+          testCase.validationPath,
+          testCase.expectedValue,
+          testCase.extractionMacro
+        ]);
+  }
+
+  // Delete a TestCase by ID
+  void deleteTestCase(int id) {
+    _db.execute('DELETE FROM TestCases WHERE id = ?', [id]);
+  }
 
   // Method to add a TestPlanResult
   int addTestPlanResult(int testPlanId, String status, String deviceId) {
@@ -63,6 +90,13 @@ class TestingDatabase {
         'INSERT INTO TestPlanResults (testPlanId, status, deviceId) VALUES (?, ?, ?)',
         [testPlanId, status, deviceId]);
     return _db.lastInsertRowId;
+  }
+
+// Method to update test plan macros
+  void updateTestPlanMacros(int testPlanId, Map<String, dynamic> macros) {
+    String macrosJson = jsonEncode(macros);
+    _db.execute('UPDATE TestPlans SET variables = ? WHERE id = ?',
+        [macrosJson, testPlanId]);
   }
 
   // Method to update a TestPlanResult

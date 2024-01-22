@@ -10,6 +10,34 @@ class TestingManager {
 
   TestingManager({required this.database, required this.deviceManager});
 
+  void addTestCaseToTestPlanWithId(
+      int testPlanId, Map<String, dynamic> testCaseData) {
+    // Extract test case  testCaseData and create TestCase
+    var testCase = TestCase.from(testCaseData);
+    database.addTestCase(testPlanId, testCase);
+  }
+
+  void deleteTesCaseWithId(int testCaseId) {
+    database.deleteTestCase(testCaseId);
+  }
+
+  void updateTestPlanMacros(int testPlanId, Map<String, dynamic> macros) {
+    database.updateTestPlanMacros(testPlanId, macros);
+  }
+
+  void createTestPlan(Map<String, dynamic> testPlanData,
+      List<Map<String, dynamic>> testCasesData) {
+    // Extract test plan details from testPlanData and create TestPlan
+    var testPlan = TestPlan.from(testPlanData);
+    database.addTestPlan(testPlan);
+
+    // Iterate over testCasesData, create each TestCase and add to the database
+    for (var testCaseData in testCasesData) {
+      var testCase = TestCase.from(testCaseData);
+      database.addTestCase(testPlan.id, testCase);
+    }
+  }
+
   TestPlan? getTestPlanById(int id) {
     TestPlan? testPlan = database.getTestPlanById(id);
     if (testPlan != null) {
@@ -28,6 +56,7 @@ class TestingManager {
     }
     return testPlans;
   }
+
   List<TestPlan> getAllTestPlans() {
     List<TestPlan> testPlans = [];
     List<TestPlan> testPlansAux = database.getAllTestPlans();

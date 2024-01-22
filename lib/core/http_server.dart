@@ -108,7 +108,7 @@ class MyHttpServer {
       return Response.ok('$serverVersion');
     });
 
-    // Route to serve index.html
+    // Route to serve simple-client.html
     router.get('/simple-client', (Request request) async {
       // Adjusted path to match the new location of index.html
       final indexPath = path.join(
@@ -128,7 +128,7 @@ class MyHttpServer {
       }
     });
 
-    // Route to serve index.html
+    // Route to serve ocpp-client.html
     router.get('/ocpp-client', (Request request) async {
       // Adjusted path to match the new location of index.html
       final indexPath =
@@ -173,7 +173,45 @@ class MyHttpServer {
 
       return router;
     }
+    // serve testing-client.html
+    router.get('/testing', (Request request) async {
+      // Adjusted path to match the new location of index.html
+      final indexPath = path.join(
+          Directory.current.path, 'lib', 'pages', 'testing-client.html');
+      final file = File(indexPath);
 
+      if (await file.exists()) {
+        var content = await file.readAsString();
+
+        // Inject environment variables into HTML
+        content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+        if (noPortInAPI) {
+          content =
+              content.replaceAll('{{API_ENDPOINT}}:{{API_PORT}}', hostname);
+        } else {
+          content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+          content = content.replaceAll('{{API_PORT}}', "$port");
+        }
+        return Response.ok(content, headers: {'Content-Type': 'text/html'});
+      } else {
+        return Response.notFound('Page not found');
+      }
+    });
+
+    // Endpoint to update test plan macros
+    router.post('/updateTestPlanMacros/<testPlanId>',
+        (Request request, String testPlanId) async {
+      try {
+        int planId = int.parse(testPlanId);
+        Map<String, dynamic> macros =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        testingManager!.updateTestPlanMacros(planId, macros);
+        return Response.ok('Macros updated successfully');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error updating macros: ${e.toString()}');
+      }
+    });
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
       List<TestPlan> allTestPlans = testingManager!.getAllTestPlans();
@@ -259,6 +297,51 @@ class MyHttpServer {
       }
       return Response.ok(jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
           headers: {'Content-Type': 'application/json'});
+    });
+
+    // Endpoint to create a TestPlan with TestCases
+    router.post('/createTestPlan', (Request request) async {
+      try {
+        var body =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        var testPlanData = body['testPlan'] as Map<String, dynamic>;
+        var testCasesData = body['testCases'] as List<Map<String, dynamic>>;
+
+        testingManager!.createTestPlan(testPlanData, testCasesData);
+
+        return Response.ok('Test Plan created successfully');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
+
+    // Endpoint to add a TestCase to a specific TestPlan
+    router.post('/addTestCaseToTestPlan/<testPlanId>',
+        (Request request, String testPlanId) async {
+      try {
+        int planId = int.parse(testPlanId);
+        var testCaseData =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+
+        testingManager!.addTestCaseToTestPlanWithId(planId, testCaseData);
+        return Response.ok('TestCase added to TestPlan');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
+
+    // Endpoint to delete a TestCase by ID
+    router.delete('/deleteTestCase/<id>', (Request request, String id) async {
+      try {
+        int testCaseId = int.parse(id);
+        testingManager!.deleteTesCaseWithId(testCaseId);
+        return Response.ok('TestCase deleted');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
     });
 
     // Default route for handling non-existent routes

@@ -113,13 +113,136 @@ Devices can connect to the WebSocket server at ws://<domainOrIP>:<WEBSOCKET_PORT
  
 #### Testing Endpoints
 
- * GET /getAllTestPlans: Retrieves all TestPlans stored in the database, with respective TestCases populated.
+
+ * POST /createTestPlan: Creates a new test plan along with its associated test cases.
+
+    * **Request Body**: A JSON object that contains the details of the test plan and a list of associated test cases. The testPlan key should have the test plan details, and the testCases key should contain an array of test case details.
+    * **Response**:
+        200 OK if the test plan and its test cases are successfully created.
+        500 Internal Server Error if there's an error during creation.
+    * **Example Request Body**:
+```json
+    {
+    "testPlan": {
+        "name": "New Test Plan",
+        "type": "sequential", // or "generic"
+        "variables": {
+        "variable1": "value1",
+        "variable2": "value2"
+        }
+    },
+    "testCases": [
+        {
+        "description": "First test case",
+        "defaultMessage": "Message content",
+        "validationPath": "path.to.validate",
+        "expectedValue": "Expected Value",
+        "extractionMacro": "ExtractionMacroName"
+        },
+        {
+        "description": "Second test case",
+        // ... other test case details ...
+        }
+    ]
+    }
+```
+
  * GET /testPlan/<id>: Retrieves a test plan by its ID, including all associated test cases.
- * GET /testCases/<testPlanId>: Fetches all test cases associated with a given test plan ID.
- * GET /getTestPlanByStatus/<deviceId>/<status>: Retrieves all test plans for a specific device that match a given status, including their test cases.
- * GET /getTestCaseById/<id>: Fetches a specific test case by its ID.
- * POST /getTestPlansByIds: Accepts a JSON list of test plan IDs in the request body and returns the corresponding test plans, each with its associated test cases.
- * GET /getTestPlansByDeviceId/<deviceId>: Retrieves all test plans associated with a given device ID, including their test cases.
+
+    * **Path Parameter**: <id> - The ID of the test plan to be fetched.
+    * **Response**:
+        200 OK with JSON representation of the test plan, including its associated test cases.
+        404 Not Found if no test plan is found with the given ID.
+
+ * GET /testCases/<testPlanId>: Fetches all test cases associated with a specific test plan ID.
+
+    * **Path Parameter**: <testPlanId> - The ID of the test plan for which test cases are being requested.
+    * **Response**:
+        200 OK with a JSON array containing all test cases associated with the test plan.
+        404 Not Found if no test plan exists with the provided ID or if there are no test cases associated with the test plan.
+
+ * GET /getTestPlanByStatus/<deviceId>/<status>: Retrieves all test plans for a specific device that match a given status.
+
+    * **Path Parameters**:
+        <deviceId> - The ID of the device.
+        <status> - The status of the test plans to be fetched.
+    * **Response**:
+        200 OK with a JSON array of test plans (including their test cases) matching the specified status for the given device.
+        404 Not Found if no matching test plans are found.
+
+ * GET /getAllTestPlans: Retrieves all TestPlans stored in the database, with respective TestCases populated.
+
+    * **Response**:
+        200 OK with a JSON array of all test plans, each including its associated test cases.
+        404 Not Found if no test plans are available in the database.
+
+ * GET /getTestCaseById/<id>: Retrieves a specific test case by its ID.
+
+    * **Path Parameter**: <id> - The ID of the test case to be fetched.
+    * **Response**:
+        200 OK with JSON representation of the test case if found.
+        404 Not Found if no test case is found with the given ID.
+
+ * POST /getTestPlansByIds: Accepts a list of test plan IDs and returns the corresponding test plans.
+
+    * **Request Body**: JSON array of integers representing the IDs of the test plans to be fetched.
+    * **Response**:
+        200 OK with a JSON array containing the requested test plans and their associated test cases.
+    * **Example Request Body**:
+```json
+    [1, 2, 3]
+```
+
+ * GET /getTestPlansByDeviceId/<deviceId>: Retrieves all test plans associated with a specific device ID.
+
+    * **Path Parameter**: <deviceId> - The ID of the device for which test plans are being requested.
+    * **Response**:
+        200 OK with JSON representation of all test plans (including their test cases) associated with the given device ID.
+        404 Not Found if no test plans are associated with the given device ID.
+
+ * POST /addTestCaseToTestPlan/<testPlanId>: Adds a new test case to a specific test plan.
+
+    * **Path Parameter**: <testPlanId> - The ID of the test plan to which the test case will be added.
+    * **Request Body**: JSON object representing the TestCase to be added. The format should match the TestCase class structure.
+    * **Response**:
+        200 OK if the test case is successfully added.
+        500 Internal Server Error if there's an error processing the request.
+
+    * **Example Request Body**:
+```json
+    {
+        "description": "Test Case Description",
+        "defaultMessage": "Message content",
+        "validationPath": "path.to.validate",
+        "expectedValue": "Expected Value",
+        "extractionMacro": "ExtractionMacroName"
+    }
+```
+ * DELETE /deleteTestCase/<id>: Deletes a test case based on its ID.
+
+    * **Path Parameter**: <id> - The ID of the test case to be deleted.
+    * **Response**:
+        200 OK if the test case is successfully deleted.
+        500 Internal Server Error if there's an error processing the request.
+
+
+ * POST /updateTestPlanMacros/<testPlanId>: Updates the macros of a specific test plan.
+
+    * **Path Parameter**: <testPlanId> - The ID of the test plan whose macros are to be updated.
+    * **Request Body**: A JSON object representing the new set of macros (key-value pairs) for the test plan.
+    * **Response**:
+        200 OK if the macros are successfully updated.
+        500 Internal Server Error if there's an error during the update process.
+  
+    * **Example Request Body**:
+```json
+    {
+    "macroKey1": "macroValue1",
+    "macroKey2": "macroValue2"
+    }
+```
+
+    * **Usage**: This endpoint allows users to update the macro variables associated with a test plan. The request body should contain a JSON object with key-value pairs representing the macros. Each key-value pair will replace or add to the existing set of macros for the specified test plan.
 
 -----
 

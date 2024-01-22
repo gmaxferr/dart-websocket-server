@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test Plans</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .inner-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+
+        .inner-table,
+        .inner-table th,
+        .inner-table td {
+            border: 1px solid #ddd;
+        }
+
+        .inner-table th,
+        .inner-table td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        .inner-table th {
+            background-color: #f7f7f7;
+        }
+    </style>
+
+</head>
+
+<body>
+    <script>
+        window.onload = function () {
+            const loadingElement = document.getElementById('loading');
+            const testPlansTable = document.getElementById('testPlansTable');
+            const tbody = testPlansTable.querySelector('tbody');
+
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getAllTestPlans')
+                .then(response => response.json())
+                .then(testPlans => {
+                    loadingElement.style.display = 'none';
+                    testPlansTable.style.display = 'table';
+
+                    testPlans.forEach(plan => {
+                        // Create a row for the test plan
+                        const trTestPlan = document.createElement('tr');
+                        trTestPlan.innerHTML = `
+                    <td>${plan.id}</td>
+                    <td>${plan.type}</td>
+                    <td>${plan.name}</td>
+                    <td><button onclick="openMacroDialog(${plan.id})">Check Macros</button></td>
+                    <td><button onclick="showTestCases(${plan.id})">See Test Cases</button></td>
+                `;
+                        tbody.appendChild(trTestPlan);
+
+                        // Create a hidden row for test cases (to be populated when the button is clicked)
+                        const trTestCases = document.createElement('tr');
+                        trTestCases.id = `testCasesRow-${plan.id}`;
+                        trTestCases.style.display = 'none';
+                        trTestCases.innerHTML = `
+                    <td colspan="5"> <!-- Adjust colspan as per your table columns -->
+                        <!-- Test cases will be added here by showTestCases function -->
+                    </td>
+                `;
+                        tbody.appendChild(trTestCases);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching test plans:', error);
+                    loadingElement.innerText = 'Failed to load test plans.';
+                });
+        };
+
+
+        function openMacroDialog(testPlanId) {
+            const modal = document.getElementById('macroModal');
+            const form = document.getElementById('macroForm');
+
+            // Clear existing form content
+            form.innerHTML = '';
+
+            // Fetch the test plan data (you'll need to implement this API call)
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getTestPlanById/' + testPlanId)
+                .then(response => response.json())
+                .then(testPlan => {
+                    Object.entries(testPlan.variables).forEach(([key, value]) => {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.innerHTML = `
+                    <label>${key}</label>
+                    <input type="text" name="${key}" value="${value}">
+                `;
+                        form.appendChild(inputGroup);
+                    });
+                })
+                .catch(error => console.error('Error fetching test plan:', error));
+
+            modal.style.display = 'block';
+        }
+
+        function closeMacroDialog() {
+            const modal = document.getElementById('macroModal');
+            modal.style.display = 'none';
+        }
+
+        function saveMacros() {
+            const form = document.getElementById('macroForm');
+            const formData = new FormData(form);
+            const updatedMacros = Object.fromEntries(formData.entries());
+
+            // API call to update macros (implement this endpoint on your server)
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/updateTestPlanMacros', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedMacros),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    closeMacroDialog();
+                    // Optionally refresh data on the page
+                })
+                .catch(error => console.error('Error updating macros:', error));
+        }
+        function showTestCases(testPlanId) {
+            const testCasesRow = document.getElementById('testCasesRow-' + testPlanId);
+            const testCasesContainer = testCasesRow.getElementsByTagName('td')[0];
+
+            // Check if test cases are already loaded
+            if (testCasesRow.style.display === 'none') {
+                fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/testCases/' + testPlanId)
+                    .then(response => response.json())
+                    .then(testCases => {
+                        testCasesContainer.innerHTML = createTestCasesTable(testCases);
+                        testCasesRow.style.display = '';
+                    })
+                    .catch(error => console.error('Error fetching test cases:', error));
+            } else {
+                // Hide the test cases if already visible
+                testCasesRow.style.display = 'none';
+            }
+        }
+
+        function createTestCasesTable(testCases) {
+            let html = '<table class="inner-table">';
+            html += '<tr><th>ID</th><th>Description</th><th>More</th></tr>';
+            testCases.forEach(tc => {
+                html += `
+            <tr>
+                <td>${tc.id}</td>
+                <td>${tc.description}</td>
+                <td><button onclick="openTestCaseDialog(${tc.id})">Show More</button></td>
+            </tr>
+        `;
+            });
+            html += '</table>';
+            return html;
+        }
+
+    </script>
+    <h1>Test Plans</h1>
+    <div id="loading">Loading...</div>
+    <table id="testPlansTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Macros</th>
+                <th>Test Cases</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Test plans will be added here dynamically -->
+            <!-- Example of a test plan row -->
+            <tr id="testPlanRow-1"> <!-- Unique ID for each test plan row -->
+                <td>1</td>
+                <!-- ... other test plan details ... -->
+                <td>
+                    <button onclick="showTestCases(1)">See Test Cases</button>
+                </td>
+            </tr>
+            <tr id="testCasesRow-1" class="test-cases-row" style="display: none;"> <!-- Row for test cases -->
+                <td colspan="5"> <!-- Adjust the colspan as per your table structure -->
+                    <!-- Test cases will be added here dynamically -->
+                </td>
+            </tr>
+            <!-- ... more test plan rows ... -->
+        </tbody>
+    </table>
+
+    <!-- Dialogs and additional components here -->
+
+    <!-- Macro Dialog Modal -->
+    <div id="macroModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeMacroDialog()">&times;</span>
+            <h2>Edit Macros</h2>
+            <form id="macroForm">
+                <!-- Dynamic macro inputs will be added here -->
+            </form>
+            <button onclick="saveMacros()">Save Changes</button>
+        </div>
+    </div>
+</body>
+
+</html>
