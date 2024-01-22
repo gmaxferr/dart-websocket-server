@@ -1,6 +1,8 @@
 
 #sqlite database
 .database
+.testing-database
+
 lib/screen_name.txt
 
 # Created by https://www.toptal.com/developers/gitignore/api/dart
