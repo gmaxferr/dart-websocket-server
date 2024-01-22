@@ -8,6 +8,7 @@ import 'package:dart_websocket_server/device_management/device_manager.dart';
 import 'package:dart_websocket_server/main.dart';
 import 'package:dart_websocket_server/testing/models/test_case.dart';
 import 'package:dart_websocket_server/testing/models/test_plan.dart';
+import 'package:dart_websocket_server/testing/models/test_plan_result.dart';
 import 'package:dart_websocket_server/testing/testing_manager.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart';
@@ -174,10 +175,35 @@ class MyHttpServer {
       return router;
     }
     // serve testing-client.html
-    router.get('/testing', (Request request) async {
+    router.get('/test-details', (Request request) async {
       // Adjusted path to match the new location of index.html
       final indexPath = path.join(
           Directory.current.path, 'lib', 'pages', 'testing-client.html');
+      final file = File(indexPath);
+
+      if (await file.exists()) {
+        var content = await file.readAsString();
+
+        // Inject environment variables into HTML
+        content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+        if (noPortInAPI) {
+          content =
+              content.replaceAll('{{API_ENDPOINT}}:{{API_PORT}}', hostname);
+        } else {
+          content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+          content = content.replaceAll('{{API_PORT}}', "$port");
+        }
+        return Response.ok(content, headers: {'Content-Type': 'text/html'});
+      } else {
+        return Response.notFound('Page not found');
+      }
+    });
+
+    // serve test-runner.html
+    router.get('/test-runner', (Request request) async {
+      // Adjusted path to match the new location of index.html
+      final indexPath = path.join(
+          Directory.current.path, 'lib', 'pages', 'test-runner-client.html');
       final file = File(indexPath);
 
       if (await file.exists()) {
@@ -222,6 +248,44 @@ class MyHttpServer {
       }
       return Response.notFound('No TestPlans found in database',
           headers: {'Content-Type': 'application/json'});
+    });
+    // Endpoint to execute multiple test plans
+    router.post('/executeTestPlans', (Request request) async {
+      try {
+        var body =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        String deviceId = body['deviceId'];
+        List<int> testPlanIds = List<int>.from(body['testPlanIds']);
+
+        await testingManager!.runMultipleTestPlans(deviceId, testPlanIds);
+
+        return Response.ok('Test plans execution started');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
+
+    // Get TestPlanResults (populatedwith test case results) for selected TestPlan ids.
+    router.post('/testPlanAndCasesResultsForIds', (Request request) async {
+      try {
+        var body =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        String deviceId = body['deviceId'];
+        List<int> testPlanIds = List<int>.from(body['testPlanIds']);
+
+        List<TestPlanResult> toReturn = [];
+        for (final testPlanId in testPlanIds) {
+          List<TestPlanResult> res = await testingManager!
+              .getTestPlanAndTestCaseResultsForTestPlanId(deviceId, testPlanId);
+          toReturn.addAll(res);
+        }
+
+        return Response.ok(jsonEncode(toReturn.map((e) => e.toMap()).toList()));
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
     });
 
     // Route to get a TestPlan by ID

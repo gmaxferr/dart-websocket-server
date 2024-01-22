@@ -99,6 +99,15 @@ class TestingDatabase {
         [macrosJson, testPlanId]);
   }
 
+// Method to update test plan macros
+  List<TestPlanResult> getTestPlanResultByTestPlanAndDevice(
+      String deviceId, int testPlanId) {
+    var results = _db.select(
+        'SELECT * FROM TestPlanResults WHERE testPlanId = ? and deviceId = ?',
+        [testPlanId, deviceId]);
+    return results.map((row) => TestPlanResult.from(row)).toList();
+  }
+
   // Method to update a TestPlanResult
   void updateTestPlanResult(int id, String status) {
     _db.execute(

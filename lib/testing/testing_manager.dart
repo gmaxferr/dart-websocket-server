@@ -1,6 +1,7 @@
 import 'package:dart_websocket_server/database/testing_database.dart';
 import 'package:dart_websocket_server/device_management/device_manager.dart';
 import 'package:dart_websocket_server/testing/models/test_case.dart';
+import 'package:dart_websocket_server/testing/models/test_case_result.dart';
 import 'package:dart_websocket_server/testing/models/test_plan.dart';
 import 'package:dart_websocket_server/testing/models/test_plan_result.dart';
 
@@ -75,6 +76,19 @@ class TestingManager {
       testPlan.testCases = database.getTestCasesByTestPlanId(testPlan.id);
     }
     return testPlans;
+  }
+
+  List<TestPlanResult> getTestPlanAndTestCaseResultsForTestPlanId(String deviceId, int planId) {
+    List<TestPlanResult> testPlanResults =
+        database.getTestPlanResultByTestPlanAndDevice(deviceId, planId);
+
+    List<TestPlanResult> toReturn = [];
+    for(var tpr in testPlanResults){
+      List<TestCaseResult> testCaseResults = database.getTestCaseResultsForTestPlanResult(tpr.id);
+      tpr.testCaseResults = testCaseResults;
+      toReturn.add(tpr);
+    }
+    return toReturn;
   }
 
   List<TestPlan> getTestPlanByStatus(String deviceId, String status) {

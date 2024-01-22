@@ -120,6 +120,13 @@
         .inner-table th {
             background-color: #f7f7f7;
         }
+
+        .test-case-inputs {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
     </style>
 
 </head>
@@ -166,6 +173,78 @@
                     loadingElement.innerText = 'Failed to load test plans.';
                 });
         };
+        function openTestPlanCreationDialog() {
+            document.getElementById('testPlanCreationModal').style.display = 'block';
+            // Reset the form fields and test cases container
+            document.getElementById('testPlanForm').reset();
+            document.getElementById('testCasesContainer').innerHTML = '';
+        }
+
+        function closeTestPlanCreationDialog() {
+            document.getElementById('testPlanCreationModal').style.display = 'none';
+        }
+
+        function addTestCaseInput() {
+            const container = document.getElementById('testCasesContainer');
+            const index = container.children.length + 1; // Unique index for each test case
+
+            const div = document.createElement('div');
+            div.className = 'test-case-inputs';
+            div.innerHTML = `
+                <h4>Test Case ${index}</h4>
+                <label for="description-${index}">Description:</label>
+                <input type="text" id="description-${index}" name="description"><br><br>
+
+                <label for="defaultMessage-${index}">Default Message:</label>
+                <input type="text" id="defaultMessage-${index}" name="defaultMessage"><br><br>
+
+                <label for="validationPath-${index}">Validation Path:</label>
+                <input type="text" id="validationPath-${index}" name="validationPath"><br><br>
+
+                <label for="expectedValue-${index}">Expected Value:</label>
+                <input type="text" id="expectedValue-${index}" name="expectedValue"><br><br>
+
+                <label for="extractionMacro-${index}">Extraction Macro:</label>
+                <input type="text" id="extractionMacro-${index}" name="extractionMacro"><br><br>
+            `;
+            container.appendChild(div);
+        }
+
+
+        document.getElementById('testPlanForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            // Gather data from the form
+            const name = document.getElementById('testPlanName').value;
+            const type = document.getElementById('testPlanType').value;
+            const testCases = Array.from(document.getElementById('testCasesContainer').children).map(div => {
+                return {
+                    description: div.querySelector('[name="description"]').value,
+                    // Gather other test case fields
+                };
+            });
+
+            const testPlanData = {
+                testPlan: { name, type, variables: {} /* Add logic for variables */ },
+                testCases
+            };
+
+            // POST request to create a new test plan
+            fetch('/createTestPlan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(testPlanData),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    closeTestPlanCreationDialog();
+                    // Optionally, refresh the test plans list
+                })
+                .catch(error => console.error('Error creating test plan:', error));
+        });
 
 
         function openMacroDialog(testPlanId) {
