@@ -153,6 +153,18 @@ class MyHttpServer {
       }
     });
 
+    // Route to get a TestPlan by ID
+    router.get('/testing-enabled', (Request request) async {
+      if (this.testingManager == null) {
+        return Response.ok(
+            'Testing Fetaure is not enables. Please check the Readme.md',
+            headers: {'Content-Type': 'application/json'});
+      }
+      return Response.ok(
+          'Testing Fetaure is enabled',
+          headers: {'Content-Type': 'application/json'});
+    });
+
     // Default route for handling non-existent routes
     router.all('/<ignored|.*>', (Request request) {
       final path = request.requestedUri.path;
