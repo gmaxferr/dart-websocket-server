@@ -160,8 +160,7 @@ class MyHttpServer {
             'Testing Features are not enabled. Please check the Readme.md',
             headers: {'Content-Type': 'application/json'});
       }
-      return Response.ok(
-          'Testing Features are enabled',
+      return Response.ok('Testing Features are enabled',
           headers: {'Content-Type': 'application/json'});
     });
 
@@ -171,13 +170,7 @@ class MyHttpServer {
       return Response.notFound('Route not found ($path)');
     });
 
-    _addTestingManagerEndpoints(router);
-
-    return router;
-  }
-
-  void _addTestingManagerEndpoints(Router router) {
-    if (testingManager == null) return;
+    if (testingManager == null) return router;
 
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
@@ -265,6 +258,8 @@ class MyHttpServer {
       return Response.ok(jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
           headers: {'Content-Type': 'application/json'});
     });
+
+    return router;
   }
 
   Future<List<int>> createChatHistoryZip() async {
