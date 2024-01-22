@@ -164,13 +164,15 @@ class MyHttpServer {
           headers: {'Content-Type': 'application/json'});
     });
 
-    // Default route for handling non-existent routes
-    router.all('/<ignored|.*>', (Request request) {
-      final path = request.requestedUri.path;
-      return Response.notFound('Route not found ($path)');
-    });
+    if (testingManager == null) {
+      // Default route for handling non-existent routes
+      router.all('/<ignored|.*>', (Request request) {
+        final path = request.requestedUri.path;
+        return Response.notFound('Route not found ($path)');
+      });
 
-    if (testingManager == null) return router;
+      return router;
+    }
 
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
@@ -257,6 +259,12 @@ class MyHttpServer {
       }
       return Response.ok(jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
           headers: {'Content-Type': 'application/json'});
+    });
+
+    // Default route for handling non-existent routes
+    router.all('/<ignored|.*>', (Request request) {
+      final path = request.requestedUri.path;
+      return Response.notFound('Route not found ($path)');
     });
 
     return router;
