@@ -109,6 +109,12 @@ class TestingDatabase {
   }
 
   // Get TestPlan by Device ID
+  List<TestPlan> getAllTestPlans() {
+    var results = _db.select('SELECT * FROM TestPlans;');
+    return results.map((row) => TestPlan.from(row)).toList();
+  }
+
+  // Get TestPlan by Device ID
   List<TestPlan> getTestPlansByDeviceId(String deviceId) {
     var results =
         _db.select('SELECT * FROM TestPlans WHERE deviceId = ?', [deviceId]);
@@ -139,38 +145,49 @@ class TestingDatabase {
   }
 
   TestPlan? getTestPlanById(int testPlanId) {
-    var result = _db.select('SELECT * FROM TestPlans WHERE id = ?', [testPlanId]);
+    var result =
+        _db.select('SELECT * FROM TestPlans WHERE id = ?', [testPlanId]);
     if (result.isEmpty) {
-      return  null;
+      return null;
     }
 
     var testPlanRow = result.first;
     TestPlan testPlan = TestPlan.from(testPlanRow);
 
     // Now fetch and attach the test cases to this test plan
-    var testCaseResults = _db.select('SELECT * FROM TestCases WHERE testPlanId = ?', [testPlanId]);
-    List<TestCase> testCases = testCaseResults.map((row) => TestCase.from(row)).toList();
+    var testCaseResults = _db
+        .select('SELECT * FROM TestCases WHERE testPlanId = ?', [testPlanId]);
+    List<TestCase> testCases =
+        testCaseResults.map((row) => TestCase.from(row)).toList();
     testPlan.testCases = testCases;
 
     return testPlan;
   }
 
   bool testPlanResultExists(int testPlanResultId) {
-    var result = _db.select('SELECT id FROM TestPlanResults WHERE id = ?', [testPlanResultId]);
+    var result = _db.select(
+        'SELECT id FROM TestPlanResults WHERE id = ?', [testPlanResultId]);
     return result.isNotEmpty;
   }
 
-
   // Get all TestCases for a given TestPlan ID
   List<TestCase> getTestCasesByTestPlanId(int testPlanId) {
-    var results = _db.select('SELECT * FROM TestCases WHERE testPlanId = ?', [testPlanId]);
-    return results.map((row) => TestCase.from(row)).toList(); // Assuming a suitable from() method in TestCase
+    var results = _db
+        .select('SELECT * FROM TestCases WHERE testPlanId = ?', [testPlanId]);
+    return results
+        .map((row) => TestCase.from(row))
+        .toList(); // Assuming a suitable from() method in TestCase
   }
 
   // Get TestPlanResult by status for a specific deviceId
-  List<TestPlanResult> getTestPlanResultByStatus(String deviceId, String status) {
-    var results = _db.select('SELECT * FROM TestPlanResults WHERE deviceId = ? AND status = ?', [deviceId, status]);
-    return results.map((row) => TestPlanResult.from(row)).toList(); // Assuming a suitable from() method in TestPlanResult
+  List<TestPlanResult> getTestPlanResultByStatus(
+      String deviceId, String status) {
+    var results = _db.select(
+        'SELECT * FROM TestPlanResults WHERE deviceId = ? AND status = ?',
+        [deviceId, status]);
+    return results
+        .map((row) => TestPlanResult.from(row))
+        .toList(); // Assuming a suitable from() method in TestPlanResult
   }
 
   TestCase? getTestCaseById(int id) {
@@ -178,9 +195,9 @@ class TestingDatabase {
     if (results.isEmpty) {
       return null;
     }
-    return TestCase.from(results.first); // Assuming a suitable from() method in TestCase
+    return TestCase.from(
+        results.first); // Assuming a suitable from() method in TestCase
   }
-
 
   // Dispose/close the database
   void dispose() {

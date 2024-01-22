@@ -166,6 +166,19 @@ class MyHttpServer {
 
   void _addTestingManagerEndpoints(Router router) {
     if (testingManager == null) return;
+
+    // Route to get a TestPlan by ID
+    router.get('/getAllTestPlans', (Request request) async {
+      List<TestPlan> allTestPlans = testingManager!.getAllTestPlans();
+      if (allTestPlans.isNotEmpty) {
+        return Response.ok(
+            jsonEncode(allTestPlans.map((e) => e.toMap()).toList()),
+            headers: {'Content-Type': 'application/json'});
+      }
+      return Response.notFound('No TestPlans found in database',
+          headers: {'Content-Type': 'application/json'});
+    });
+
     // Route to get a TestPlan by ID
     router.get('/testPlan/<id>', (Request request, String id) async {
       int testPlanId = int.parse(id);

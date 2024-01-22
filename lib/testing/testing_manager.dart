@@ -28,6 +28,17 @@ class TestingManager {
     }
     return testPlans;
   }
+  List<TestPlan> getAllTestPlans() {
+    List<TestPlan> testPlans = [];
+    List<TestPlan> testPlansAux = database.getAllTestPlans();
+    for (TestPlan tp in testPlansAux) {
+      TestPlan? testPlan = getTestPlanById(tp.id);
+      if (testPlan != null) {
+        testPlans.add(testPlan);
+      }
+    }
+    return testPlans;
+  }
 
   List<TestPlan> getTestPlansByDeviceId(String deviceId) {
     List<TestPlan> testPlans = database.getTestPlansByDeviceId(deviceId);

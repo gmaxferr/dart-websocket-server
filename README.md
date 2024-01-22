@@ -113,6 +113,7 @@ Devices can connect to the WebSocket server at ws://<domainOrIP>:<WEBSOCKET_PORT
  
 #### Testing Endpoints
 
+ * GET /getAllTestPlans: Retrieves all TestPlans stored in the database, with respective TestCases populated.
  * GET /testPlan/<id>: Retrieves a test plan by its ID, including all associated test cases.
  * GET /testCases/<testPlanId>: Fetches all test cases associated with a given test plan ID.
  * GET /getTestPlanByStatus/<deviceId>/<status>: Retrieves all test plans for a specific device that match a given status, including their test cases.
