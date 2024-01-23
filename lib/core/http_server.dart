@@ -411,6 +411,17 @@ class MyHttpServer {
             body: 'Error processing request: ${e.toString()}');
       }
     });
+    // Endpoint to delete a TestCase by ID
+    router.delete('/deleteTestPlanResult/<id>', (Request request, String id) async {
+      try {
+        int testPlanResultId = int.parse(id);
+        testingManager!.deleteTestPlanResultWithId(testPlanResultId);
+        return Response.ok('TestPlanResult and all associated TestCaseResults were deleted');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
     
     // Endpoint to delete a TestPlan by ID
     router.delete('/deleteTestPlan/<id>', (Request request, String id) async {
@@ -418,6 +429,17 @@ class MyHttpServer {
         int testPlanId = int.parse(id);
         testingManager!.deleteTestPlanWithId(testPlanId);
         return Response.ok('TestPlan deleted');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
+    // Endpoint to delete a TestPlanResult by ID
+    router.delete('/deleteTestPlanResult/<id>', (Request request, String id) async {
+      try {
+        int testPlanResultId = int.parse(id);
+        testingManager!.deleteTestPlanResultWithId(testPlanResultId);
+        return Response.ok('TestPlanResult deleted');
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');

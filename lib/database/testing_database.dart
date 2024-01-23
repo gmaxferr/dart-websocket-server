@@ -90,6 +90,16 @@ class TestingDatabase {
     _db.execute('DELETE FROM TestPlans WHERE id = ?', [id]);
   }
 
+  // Delete a TestPlanResult by ID
+  void deleteTestPlanResult(int id) {
+    _db.execute('DELETE FROM TestPlanResults WHERE id = ?', [id]);
+  }
+
+  // Delete a TestCaseResults by TestPlanResult id
+  void deleteAllTestCaseResultsForPlanResultWithId(int testPlanResultId) {
+    _db.execute('DELETE FROM TestCaseResults WHERE testPlanResultId = ?', [testPlanResultId]);
+  }
+
   // Method to add a TestPlanResult
   int addTestPlanResult(int testPlanId, String status, String deviceId) {
     _db.execute(
@@ -191,6 +201,13 @@ class TestingDatabase {
         'SELECT * FROM TestCaseResults WHERE testPlanResultId = ?',
         [testPlanResultId]);
     return results.map((row) => TestCaseResult.from(row)).toList();
+  }
+
+  // Get TestPlanResult By Id
+  TestPlanResult? getTestCaseResultsById(int testPlanResultId) {
+    var results = _db.select(
+        'SELECT * FROM TestPlanResults WHERE id = ?', [testPlanResultId]);
+    return results.map((row) => TestPlanResult.from(row)).toList().firstOrNull;
   }
 
   TestPlan? getTestPlanById(int testPlanId) {

@@ -33,6 +33,15 @@ class TestingManager {
     database.deleteTestPlan(tp.id!);
   }
 
+  void deleteTestPlanResultWithId(int testPlanResultId) {
+    TestPlanResult? tp = database.getTestCaseResultsById(testPlanResultId);
+    if(tp == null) return;
+    
+    database.deleteAllTestCaseResultsForPlanResultWithId(testPlanResultId);
+
+    database.deleteTestPlanResult(testPlanResultId);
+  }
+
   void updateTestPlanMacros(int testPlanId, Map<String, dynamic> macros) {
     database.updateTestPlanMacros(testPlanId, macros);
   }

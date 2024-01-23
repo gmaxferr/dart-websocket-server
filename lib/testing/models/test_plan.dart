@@ -33,14 +33,14 @@ class TestPlan {
     testDatabase.updateTestPlanResult(
         currentTestPlanResultId, TestStatus.executing.name);
 
-    for (var testCase in testCases ?? []) {
+    for (TestCase testCase in testCases ?? []) {
       String message = _prepareMessage(testCase, variables);
       OcppMessage? requestMessage = OcppMessage.fromPlainText(message);
 
       if (requestMessage == null) {
         testDatabase.addTestCaseResult(
             currentTestPlanResultId,
-            testCase.id,
+            testCase.id!,
             TestStatus.failed.name,
             message,
             "",
@@ -48,28 +48,29 @@ class TestPlan {
         continue;
       }
 
-      bool success = deviceManager.sendMessage(deviceId, message);
-      if (!success && type == TestPlanType.sequential) {
+      bool messageSent = deviceManager.sendMessage(deviceId, message);
+      if (!messageSent && type == TestPlanType.sequential) {
         testDatabase.addTestCaseResult(
             currentTestPlanResultId,
-            testCase.id,
+            testCase.id!,
             TestStatus.failed.name,
             message,
             "",
             "Could not send message to device with ID '${deviceId}'");
-        return;
       }
 
       String? responseMessage;
-      for (int attempt = 0; attempt < 5; attempt++) {
-        responseMessage = await deviceManager.getDeviceResponseTo(
-            deviceId, requestMessage.messageId);
-        if (responseMessage != null) break;
-        await Future.delayed(Duration(seconds: 1));
+      if (messageSent) {
+        for (int attempt = 0; attempt < 5; attempt++) {
+          responseMessage = await deviceManager.getDeviceResponseTo(
+              deviceId, requestMessage.messageId);
+          if (responseMessage != null) break;
+          await Future.delayed(Duration(seconds: 1));
+        }
       }
 
       TestStatus testCaseStatus = TestStatus.failed;
-      if (responseMessage != null) {
+      if (messageSent && responseMessage != null) {
         OcppMessage? response = OcppMessage.fromPlainText(responseMessage);
         if (response != null &&
             testCase.validateResponse(response, variables)) {
@@ -79,7 +80,7 @@ class TestPlan {
 
       testDatabase.addTestCaseResult(
           currentTestPlanResultId,
-          testCase.id,
+          testCase.id!,
           testCaseStatus.name,
           message,
           responseMessage ?? "No response",

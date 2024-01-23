@@ -128,10 +128,10 @@
             <td><button onclick="toggleDetails('details-${result.id}', this)">Toggle Details</button></td>
         `;
                 let testCaseLines = '';
-                result.testCases.forEach(testCase => {
+                result.testCaseResults.forEach(testCase => {
                     testCaseLines = `
                         ${testCaseLines}
-                        <td>Teste-${testCase.id}</td>
+                        <td>Teste-${testCase.status}</td>
                     `;
                 });
 
