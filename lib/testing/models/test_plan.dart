@@ -12,7 +12,7 @@ enum TestPlanType { sequential, generic }
 enum TestStatus { waiting, executing, success, allFailed, someFailed, failed }
 
 class TestPlan {
-  final int id;
+  final int? id;
   final String name;
   final TestPlanType type;
   Map<String, dynamic> variables; // Dynamic variables for macro replacement
@@ -29,7 +29,7 @@ class TestPlan {
       TestingDatabase testDatabase, int? testPlanResultId) async {
     int currentTestPlanResultId = testPlanResultId ??
         testDatabase.addTestPlanResult(
-            this.id, TestStatus.waiting.name, deviceId);
+            this.id!, TestStatus.waiting.name, deviceId);
     testDatabase.updateTestPlanResult(
         currentTestPlanResultId, TestStatus.executing.name);
 
@@ -46,6 +46,18 @@ class TestPlan {
             "",
             "Request message parsing failed");
         continue;
+      }
+
+      bool success = deviceManager.sendMessage(deviceId, message);
+      if (!success && type == TestPlanType.sequential) {
+        testDatabase.addTestCaseResult(
+            currentTestPlanResultId,
+            testCase.id,
+            TestStatus.failed.name,
+            message,
+            "",
+            "Could not send message to device with ID '${deviceId}'");
+        return;
       }
 
       String? responseMessage;
@@ -122,7 +134,9 @@ class TestPlan {
       id: map['id'],
       name: map['name'],
       type: TestPlanType.values.firstWhere((e) => e.name == map['type']),
-      variables: jsonDecode(map['variables']),
+      variables: map['variables'] is String
+          ? jsonDecode(map['variables'])
+          : map['variables'],
       // Initialize testCases as empty, since they are fetched separately
       testCases: [],
     );

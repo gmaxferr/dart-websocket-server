@@ -241,6 +241,7 @@ class MyHttpServer {
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
       List<TestPlan> allTestPlans = testingManager!.getAllTestPlans();
+      print("Nr of TestPlans retrieved: ${allTestPlans.length}");
       if (allTestPlans.isNotEmpty) {
         return Response.ok(
             jsonEncode(allTestPlans.map((e) => e.toMap()).toList()),
@@ -368,13 +369,16 @@ class MyHttpServer {
       try {
         var body =
             jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        print("\n--- /createTestPlan ---\n");
+        print(body);
         var testPlanData = body['testPlan'] as Map<String, dynamic>;
-        var testCasesData = body['testCases'] as List<Map<String, dynamic>>;
+        var testCasesData = (body['testCases'] as List).map((e) => e as Map<String, dynamic>).toList();
 
         testingManager!.createTestPlan(testPlanData, testCasesData);
-
+        print("New test plan added");
         return Response.ok('Test Plan created successfully');
-      } catch (e) {
+      } catch (e, trace) {
+        print('Error processing request: ${e.toString()}\n$trace');
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');
       }
@@ -400,8 +404,20 @@ class MyHttpServer {
     router.delete('/deleteTestCase/<id>', (Request request, String id) async {
       try {
         int testCaseId = int.parse(id);
-        testingManager!.deleteTesCaseWithId(testCaseId);
+        testingManager!.deleteTestCaseWithId(testCaseId);
         return Response.ok('TestCase deleted');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
+    
+    // Endpoint to delete a TestPlan by ID
+    router.delete('/deleteTestPlan/<id>', (Request request, String id) async {
+      try {
+        int testPlanId = int.parse(id);
+        testingManager!.deleteTestPlanWithId(testPlanId);
+        return Response.ok('TestPlan deleted');
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');

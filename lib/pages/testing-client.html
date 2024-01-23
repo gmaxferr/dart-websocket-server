@@ -151,8 +151,11 @@
                     <td>${plan.id}</td>
                     <td>${plan.type}</td>
                     <td>${plan.name}</td>
-                    <td><button onclick="openMacroDialog(${plan.id})">Check Macros</button></td>
-                    <td><button onclick="showTestCases(${plan.id})">See Test Cases</button></td>
+                    <td>
+                        <button onclick="openMacroDialog(${plan.id})">Check Macros</button>
+                        <button onclick="showTestCases(${plan.id})">See Test Cases</button>
+                        <button onclick="deleteTestPlan(${plan.id})" style="color: red;">Delete Plan</button>
+                    </td>
                 `;
                         tbody.appendChild(trTestPlan);
 
@@ -173,11 +176,102 @@
                     loadingElement.innerText = 'Failed to load test plans.';
                 });
         };
+
+        function deleteTestPlan(testPlanId) {
+            if (!confirm('Are you sure you want to delete this test plan?')) {
+                return; // Exit if user cancels the action
+            }
+
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/deleteTestPlan/' + testPlanId, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error deleting test plan');
+                    }
+                    removeTestPlanFromTable(testPlanId);
+                    refresh();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete the test plan.');
+                });
+        }
+
+        function removeTestPlanFromTable(testPlanId) {
+            const row = document.getElementById('testPlanRow-' + testPlanId);
+            if (row) {
+                row.remove();
+            }
+            const testCaseRow = document.getElementById('testCasesRow-' + testPlanId);
+            if (testCaseRow) {
+                testCaseRow.remove();
+            }
+        }
+
+
         function openTestPlanCreationDialog() {
             document.getElementById('testPlanCreationModal').style.display = 'block';
             // Reset the form fields and test cases container
             document.getElementById('testPlanForm').reset();
             document.getElementById('testCasesContainer').innerHTML = '';
+
+
+            document.getElementById('testPlanForm').addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                // Gather data from the form
+                const name = document.getElementById('testPlanName').value;
+                const type = document.getElementById('testPlanType').value;
+                const testCases = Array.from(document.getElementById('testCasesContainer').children).map(div => {
+                    return {
+                        description: div.querySelector('[name="description"]').value,
+                        defaultMessage: div.querySelector('[name="defaultMessage"]').value,
+                        validationPath: div.querySelector('[name="validationPath"]').value,
+                        expectedValue: div.querySelector('[name="expectedValue"]').value,
+                        extractionMacro: div.querySelector('[name="extractionMacro"]').value
+                    };
+                });
+
+                // Collecting variables/macros
+                const variableKeys = document.querySelectorAll('[name="variableKey[]"]');
+                const variableValues = document.querySelectorAll('[name="variableValue[]"]');
+                const variables = {};
+                variableKeys.forEach((keyNode, index) => {
+                    if (keyNode.value) {
+                        variables[keyNode.value] = variableValues[index].value;
+                    }
+                });
+
+                const testPlanData = {
+                    testPlan: {
+                        name,
+                        type,
+                        variables
+                    },
+                    testCases
+                };
+                
+                console.log(JSON.stringify(testPlanData));
+                console.log('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/createTestPlan');
+                // POST request to create a new test plan
+                fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/createTestPlan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testPlanData),
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        closeTestPlanCreationDialog();
+                        // Optionally, refresh the test plans list
+                    })
+                    .catch(error => console.error('Error creating test plan:', error));
+            });
+
         }
 
         function closeTestPlanCreationDialog() {
@@ -210,41 +304,6 @@
             container.appendChild(div);
         }
 
-
-        document.getElementById('testPlanForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            // Gather data from the form
-            const name = document.getElementById('testPlanName').value;
-            const type = document.getElementById('testPlanType').value;
-            const testCases = Array.from(document.getElementById('testCasesContainer').children).map(div => {
-                return {
-                    description: div.querySelector('[name="description"]').value,
-                    // Gather other test case fields
-                };
-            });
-
-            const testPlanData = {
-                testPlan: { name, type, variables: {} /* Add logic for variables */ },
-                testCases
-            };
-
-            // POST request to create a new test plan
-            fetch('/createTestPlan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(testPlanData),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    closeTestPlanCreationDialog();
-                    // Optionally, refresh the test plans list
-                })
-                .catch(error => console.error('Error creating test plan:', error));
-        });
 
 
         function openMacroDialog(testPlanId) {
@@ -334,6 +393,89 @@
             return html;
         }
 
+        function openTestCaseDialog(testCaseId) {
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getTestCaseById/' + testCaseId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(testCase => {
+                    const modal = document.getElementById('testCaseModal');
+                    const form = document.getElementById('testCaseForm');
+                    form.innerHTML = `
+                <label for="testCaseDescription">Description:</label>
+                <input type="text" id="testCaseDescription" name="description" value="${testCase.description || ''}"><br><br>
+                <label for="testCaseDefaultMessage">Default Message:</label>
+                <input type="text" id="testCaseDefaultMessage" name="defaultMessage" value="${testCase.defaultMessage || ''}"><br><br>
+                <label for="testCaseValidationPath">Validation Path:</label>
+                <input type="text" id="testCaseValidationPath" name="validationPath" value="${testCase.validationPath || ''}"><br><br>
+                <label for="testCaseExpectedValue">Expected Value:</label>
+                <input type="text" id="testCaseExpectedValue" name="expectedValue" value="${testCase.expectedValue || ''}"><br><br>
+                <label for="testCaseExtractionMacro">Extraction Macro:</label>
+                <input type="text" id="testCaseExtractionMacro" name="extractionMacro" value="${testCase.extractionMacro || ''}"><br><br>
+            `; // Add more fields as necessary
+                    modal.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error fetching test case:', error);
+                    alert('Failed to load test case details.');
+                });
+        }
+
+        function closeTestCaseDialog() {
+            document.getElementById('testCaseModal').style.display = 'none';
+        }
+
+        function saveTestCaseChanges() {
+            const form = document.getElementById('testCaseForm');
+            const formData = new FormData(form);
+            const updatedTestCase = Object.fromEntries(formData.entries());
+            const testCaseId = updatedTestCase.id;
+            const testPlanId = updatedTestCase.testPlanId; // Ensure this is captured or passed to the function
+
+            // First, delete the existing test case
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/deleteTestCase/' + testCaseId, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error deleting test case');
+                    }
+                    // Then, add the updated test case
+                    return fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/addTestCaseToTestPlan/' + testPlanId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedTestCase)
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error adding updated test case');
+                    }
+                    closeTestCaseDialog();
+                    refresh(); // Refresh data on the page
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to update the test case.');
+                });
+        }
+        function refresh() {
+            // Reloads the current document
+            location.reload();
+        }
+        function addVariableInput() {
+            const container = document.getElementById('variablesContainer');
+            const div = document.createElement('div');
+            div.className = 'variable-input';
+            div.innerHTML = `
+        <input type="text" placeholder="Key" name="variableKey[]">
+        <input type="text" placeholder="Value" name="variableValue[]">
+    `;
+            container.appendChild(div);
+        }
     </script>
     <h1>Test Plans</h1>
     <div id="loading">Loading...</div>
@@ -343,20 +485,12 @@
                 <th>ID</th>
                 <th>Type</th>
                 <th>Name</th>
-                <th>Macros</th>
-                <th>Test Cases</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <!-- Test plans will be added here dynamically -->
-            <!-- Example of a test plan row -->
-            <tr id="testPlanRow-1"> <!-- Unique ID for each test plan row -->
-                <td>1</td>
-                <!-- ... other test plan details ... -->
-                <td>
-                    <button onclick="showTestCases(1)">See Test Cases</button>
-                </td>
-            </tr>
+
             <tr id="testCasesRow-1" class="test-cases-row" style="display: none;"> <!-- Row for test cases -->
                 <td colspan="5"> <!-- Adjust the colspan as per your table structure -->
                     <!-- Test cases will be added here dynamically -->
@@ -388,6 +522,14 @@
                     <option value="generic">Generic</option>
                 </select><br><br>
 
+                <!-- Container for adding Variables/Macros -->
+                <div>
+                    <h3>Variables/Macros</h3>
+                    <div id="variablesContainer">
+                        <!-- Variables/Macros will be added here dynamically -->
+                    </div>
+                    <button type="button" onclick="addVariableInput()">Add Variable/Macro</button><br><br>
+                </div>
                 <!-- Container for adding Test Cases -->
                 <div id="testCasesContainer">
                     <!-- Test Cases will be added here dynamically -->
@@ -396,6 +538,19 @@
 
                 <input type="submit" value="Create Test Plan">
             </form>
+        </div>
+    </div>
+
+    <!-- Test Case Details Modal -->
+    <div id="testCaseModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTestCaseDialog()">&times;</span>
+            <h2>Edit Test Case</h2>
+            <form id="testCaseForm">
+                <!-- Inputs for Test Case details -->
+                <!-- Dynamically populated -->
+            </form>
+            <button onclick="saveTestCaseChanges()">Save Changes</button>
         </div>
     </div>
 

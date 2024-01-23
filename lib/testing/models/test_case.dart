@@ -1,7 +1,7 @@
 import 'package:dart_websocket_server/testing/models/ocpp_message.dart';
 
 class TestCase {
-  final int id;
+  final int? id;
   final String description;
   final String
       defaultMessage; // The default message to send, may contain macros

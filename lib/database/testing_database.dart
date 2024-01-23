@@ -59,10 +59,11 @@ class TestingDatabase {
     ''');
   }
 // Add a new TestPlan to the database
-  void addTestPlan(TestPlan testPlan) {
+  int addTestPlan(TestPlan testPlan) {
     _db.execute(
         'INSERT INTO TestPlans (name, type, variables) VALUES (?, ?, ?)',
         [testPlan.name, testPlan.type.name, jsonEncode(testPlan.variables)]);
+    return _db.lastInsertRowId;
   }
 
   // Add a new TestCase to the database
@@ -82,6 +83,11 @@ class TestingDatabase {
   // Delete a TestCase by ID
   void deleteTestCase(int id) {
     _db.execute('DELETE FROM TestCases WHERE id = ?', [id]);
+  }
+
+  // Delete a TestPlan by ID
+  void deleteTestPlan(int id) {
+    _db.execute('DELETE FROM TestPlans WHERE id = ?', [id]);
   }
 
   // Method to add a TestPlanResult

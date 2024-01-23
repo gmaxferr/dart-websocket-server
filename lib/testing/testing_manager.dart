@@ -18,8 +18,19 @@ class TestingManager {
     database.addTestCase(testPlanId, testCase);
   }
 
-  void deleteTesCaseWithId(int testCaseId) {
+  void deleteTestCaseWithId(int testCaseId) {
     database.deleteTestCase(testCaseId);
+  }
+
+  void deleteTestPlanWithId(int testCaseId) {
+    TestPlan? tp = getTestPlanById(testCaseId);
+    if(tp == null) return;
+
+    for(final tc in (tp.testCases ?? [])){
+      this.deleteTestCaseWithId(tc.id);
+    }
+
+    database.deleteTestPlan(tp.id!);
   }
 
   void updateTestPlanMacros(int testPlanId, Map<String, dynamic> macros) {
@@ -30,12 +41,12 @@ class TestingManager {
       List<Map<String, dynamic>> testCasesData) {
     // Extract test plan details from testPlanData and create TestPlan
     var testPlan = TestPlan.from(testPlanData);
-    database.addTestPlan(testPlan);
+    int testPlanId = database.addTestPlan(testPlan);
 
     // Iterate over testCasesData, create each TestCase and add to the database
     for (var testCaseData in testCasesData) {
       var testCase = TestCase.from(testCaseData);
-      database.addTestCase(testPlan.id, testCase);
+      database.addTestCase(testPlanId, testCase);
     }
   }
 
@@ -62,7 +73,7 @@ class TestingManager {
     List<TestPlan> testPlans = [];
     List<TestPlan> testPlansAux = database.getAllTestPlans();
     for (TestPlan tp in testPlansAux) {
-      TestPlan? testPlan = getTestPlanById(tp.id);
+      TestPlan? testPlan = getTestPlanById(tp.id!);
       if (testPlan != null) {
         testPlans.add(testPlan);
       }
@@ -73,7 +84,7 @@ class TestingManager {
   List<TestPlan> getTestPlansByDeviceId(String deviceId) {
     List<TestPlan> testPlans = database.getTestPlansByDeviceId(deviceId);
     for (TestPlan testPlan in testPlans) {
-      testPlan.testCases = database.getTestCasesByTestPlanId(testPlan.id);
+      testPlan.testCases = database.getTestCasesByTestPlanId(testPlan.id!);
     }
     return testPlans;
   }

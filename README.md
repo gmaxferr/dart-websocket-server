@@ -226,6 +226,14 @@ Devices can connect to the WebSocket server at ws://<domainOrIP>:<WEBSOCKET_PORT
         500 Internal Server Error if there's an error processing the request.
 
 
+ * DELETE /deleteTestPlan/<id>: Deletes a test plan based on its ID and associated test cases.
+
+    * **Path Parameter**: <id> - The ID of the test plan to be deleted.
+    * **Response**:
+        200 OK if the test plan is successfully deleted.
+        500 Internal Server Error if there's an error processing the request.
+
+
  * POST /updateTestPlanMacros/<testPlanId>: Updates the macros of a specific test plan.
 
     * **Path Parameter**: <testPlanId> - The ID of the test plan whose macros are to be updated.
