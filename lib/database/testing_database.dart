@@ -154,7 +154,8 @@ class TestingDatabase {
 
   // Update a TestCase
   void updateTestCase(int id, String description, String defaultMessage,
-      String validationPath, String expectedValue, String extractionMacro) {
+      String validationPath, String expectedValue, String? extractionMacro) {
+        
     _db.execute(
         'UPDATE TestCases SET description = ?, defaultMessage = ?, validationPath = ?, expectedValue = ?, extractionMacro = ? WHERE id = ?',
         [

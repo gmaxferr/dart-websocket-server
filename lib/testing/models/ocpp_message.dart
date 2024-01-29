@@ -16,18 +16,39 @@ class OcppMessage {
   static OcppMessage? fromPlainText(String message) {
     try {
       List<dynamic> _parsedMessage = jsonDecode(message);
-      final _messageType = _parsedMessage[0];
-      final _messageId = _parsedMessage[1];
-      final _actionName = _parsedMessage.length > 2 ? _parsedMessage[2] : null;
-      final _data = _parsedMessage.length > 3 ? _parsedMessage[3] : {};
+      if (_parsedMessage.length < 2 || _parsedMessage.length > 4) {
+        return null; // Ensuring message format is correct
+      }
+
+      final int _messageType = _parsedMessage[0];
+      final String _messageId = _parsedMessage[1];
+      final String? _actionName = _parsedMessage.length > 2 && _parsedMessage[2] is String ? _parsedMessage[2] : null;
+      final Map<String, dynamic> _data = _parsedMessage.length > 3 && _parsedMessage[3] is Map<String, dynamic> ? _parsedMessage[3] : {};
 
       return OcppMessage._internal(
-          data: _data,
-          messageId: _messageId,
-          messageType: _messageType,
-          actionName: _actionName);
+        messageType: _messageType,
+        messageId: _messageId,
+        actionName: _actionName,
+        data: _data,
+      );
     } catch (err) {
+      // Optionally, you can log the error or handle it differently
       return null;
     }
+  }
+
+  @override
+  String toString() {
+    List<dynamic> messageList = [messageType, messageId];
+    
+    // Add actionName to the list if it's not null
+    if (actionName != null) {
+      messageList.add(actionName);
+    }
+
+    // Always add data (which could be an empty map)
+    messageList.add(data);
+
+    return jsonEncode(messageList);
   }
 }

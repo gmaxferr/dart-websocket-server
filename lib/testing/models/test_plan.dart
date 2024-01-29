@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:dart_websocket_server/database/testing_database.dart';
 import 'package:dart_websocket_server/device_management/device_manager.dart';
 import 'package:dart_websocket_server/testing/models/ocpp_message.dart';
@@ -45,10 +46,10 @@ class TestPlan {
             message,
             "",
             "Request message parsing failed");
-        continue;
       }
 
-      bool messageSent = deviceManager.sendMessage(deviceId, message);
+      bool messageSent = requestMessage != null &&
+          deviceManager.sendMessage(deviceId, message);
       if (!messageSent && type == TestPlanType.sequential) {
         testDatabase.addTestCaseResult(
             currentTestPlanResultId,
@@ -98,11 +99,24 @@ class TestPlan {
         currentTestPlanResultId, finalStatus.name);
   }
 
+  String _generateRandomString(int length) {
+    const String chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    Random random = Random();
+
+    return List.generate(length, (_) => chars[random.nextInt(chars.length)])
+        .join();
+  }
+
   String _prepareMessage(TestCase testCase, Map<String, dynamic> variables) {
     String message = testCase.defaultMessage;
+
+    variables.addAll({'__random__': _generateRandomString(7)});
+
     variables.forEach((macro, value) {
-      message = message.replaceAll("__${macro}__", value.toString());
+      message = message.replaceAll(macro, value.toString());
     });
+
     return message;
   }
 

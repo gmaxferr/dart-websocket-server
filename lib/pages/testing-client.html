@@ -251,7 +251,7 @@
                     },
                     testCases
                 };
-                
+
                 console.log(JSON.stringify(testPlanData));
                 console.log('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/createTestPlan');
                 // POST request to create a new test plan
@@ -367,7 +367,7 @@
                 fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/testCases/' + testPlanId)
                     .then(response => response.json())
                     .then(testCases => {
-                        testCasesContainer.innerHTML = createTestCasesTable(testCases);
+                        testCasesContainer.innerHTML = createTestCasesTable(testPlanId, testCases);
                         testCasesRow.style.display = '';
                     })
                     .catch(error => console.error('Error fetching test cases:', error));
@@ -377,7 +377,7 @@
             }
         }
 
-        function createTestCasesTable(testCases) {
+        function createTestCasesTable(testPlanId, testCases) {
             let html = '<table class="inner-table">';
             html += '<tr><th>ID</th><th>Description</th><th>More</th></tr>';
             testCases.forEach(tc => {
@@ -385,7 +385,7 @@
             <tr>
                 <td>${tc.id}</td>
                 <td>${tc.description}</td>
-                <td><button onclick="openTestCaseDialog(${tc.id})">Show More</button></td>
+                <td><button onclick="openTestCaseDialog(${testPlanId}, ${tc.id})">Show More</button></td>
             </tr>
         `;
             });
@@ -393,7 +393,7 @@
             return html;
         }
 
-        function openTestCaseDialog(testCaseId) {
+        function openTestCaseDialog(testPlanId, testCaseId) {
             fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/getTestCaseById/' + testCaseId)
                 .then(response => {
                     if (!response.ok) {
@@ -405,14 +405,16 @@
                     const modal = document.getElementById('testCaseModal');
                     const form = document.getElementById('testCaseForm');
                     form.innerHTML = `
+                <input type="text" id="testCaseId" name="id" value="${testCase.id || ''}" ><br><br>
+                <input type="text" id="testPlanId" name="testPlanId" value="${testPlanId}" ><br><br>
                 <label for="testCaseDescription">Description:</label>
                 <input type="text" id="testCaseDescription" name="description" value="${testCase.description || ''}"><br><br>
                 <label for="testCaseDefaultMessage">Default Message:</label>
-                <input type="text" id="testCaseDefaultMessage" name="defaultMessage" value="${testCase.defaultMessage || ''}"><br><br>
+                <input type="text" id="testCaseDefaultMessage" name="defaultMessage" style="width: 100%;" value='${testCase.defaultMessage || ''}'><br><br>
                 <label for="testCaseValidationPath">Validation Path:</label>
                 <input type="text" id="testCaseValidationPath" name="validationPath" value="${testCase.validationPath || ''}"><br><br>
                 <label for="testCaseExpectedValue">Expected Value:</label>
-                <input type="text" id="testCaseExpectedValue" name="expectedValue" value="${testCase.expectedValue || ''}"><br><br>
+                <input type="text" id="testCaseExpectedValue" name="expectedValue" value='${testCase.expectedValue || ''}''><br><br>
                 <label for="testCaseExtractionMacro">Extraction Macro:</label>
                 <input type="text" id="testCaseExtractionMacro" name="extractionMacro" value="${testCase.extractionMacro || ''}"><br><br>
             `; // Add more fields as necessary
@@ -428,32 +430,26 @@
             document.getElementById('testCaseModal').style.display = 'none';
         }
 
-        function saveTestCaseChanges() {
+        function saveTestCaseChanges(id) {
             const form = document.getElementById('testCaseForm');
             const formData = new FormData(form);
             const updatedTestCase = Object.fromEntries(formData.entries());
             const testCaseId = updatedTestCase.id;
             const testPlanId = updatedTestCase.testPlanId; // Ensure this is captured or passed to the function
-
+            console.log(updatedTestCase);
+            console.log("Deleting...");
             // First, delete the existing test case
-            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/deleteTestCase/' + testCaseId, {
-                method: 'DELETE'
+            fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/updateTestCase/' + testCaseId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedTestCase)
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Error deleting test case');
-                    }
-                    // Then, add the updated test case
-                    return fetch('{{API_SCHEMA}}://{{API_ENDPOINT}}:{{API_PORT}}/addTestCaseToTestPlan/' + testPlanId, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updatedTestCase)
-                    });
-                })
-                .then(response => {
-                    if (!response.ok) {
+                        console.log("NOK");
                         throw new Error('Error adding updated test case');
                     }
+                    console.log("OK!");
                     closeTestCaseDialog();
                     refresh(); // Refresh data on the page
                 })

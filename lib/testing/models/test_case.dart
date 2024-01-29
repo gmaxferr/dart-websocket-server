@@ -36,7 +36,8 @@ class TestCase {
     if (extractionMacro != null && actualValue != null) {
       testPlanVariables[extractionMacro!] = actualValue;
     }
-
+    print(
+        "PATH:\t\t$validationPath\nEXPECTED VALUE:\t${expectedValue}\nACTUAL VALUE:\t${actualValue}\n");
     return actualValue == expectedValue;
   }
 
@@ -55,12 +56,12 @@ class TestCase {
   static TestCase from(Map<String, dynamic> map) {
     return TestCase(
       // Assuming these are the column names in the TestCases table
-      id: map['id'],
-      description: map['description'],
-      defaultMessage: map['defaultMessage'],
-      validationPath: map['validationPath'],
-      expectedValue: map['expectedValue'],
-      extractionMacro: map['extractionMacro'],
+      id: map['id'] == null ? null : map['id'] is String ? int.parse(map['id']) : map['id'], 
+      description: map['description'] ?? "",
+      defaultMessage: map['defaultMessage'] ?? "",
+      validationPath: map['validationPath'] ?? "",
+      expectedValue: map['expectedValue'] ?? "",
+      extractionMacro: map['extractionMacro'] ?? "",
     );
   }
 

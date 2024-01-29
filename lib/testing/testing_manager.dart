@@ -14,8 +14,29 @@ class TestingManager {
   void addTestCaseToTestPlanWithId(
       int testPlanId, Map<String, dynamic> testCaseData) {
     // Extract test case  testCaseData and create TestCase
-    var testCase = TestCase.from(testCaseData);
-    database.addTestCase(testPlanId, testCase);
+    print(testCaseData);
+    try {
+      var testCase = TestCase.from(testCaseData);
+      print("after");
+      print(testCase.toMap());
+      database.addTestCase(testPlanId, testCase);
+    } catch (err, trace) {
+      print(err);
+      print(trace);
+    }
+  }
+
+  void updateTestCase(int testCaseId, Map<String, dynamic> testCaseData) {
+    TestCase testCase = TestCase.from(testCaseData);
+
+    database.updateTestCase(
+      testCaseId,
+      testCase.description,
+      testCase.defaultMessage,
+      testCase.validationPath,
+      testCase.expectedValue,
+      testCase.extractionMacro,
+    );
   }
 
   void deleteTestCaseWithId(int testCaseId) {
@@ -24,9 +45,9 @@ class TestingManager {
 
   void deleteTestPlanWithId(int testCaseId) {
     TestPlan? tp = getTestPlanById(testCaseId);
-    if(tp == null) return;
+    if (tp == null) return;
 
-    for(final tc in (tp.testCases ?? [])){
+    for (final tc in (tp.testCases ?? [])) {
       this.deleteTestCaseWithId(tc.id);
     }
 
@@ -35,8 +56,8 @@ class TestingManager {
 
   void deleteTestPlanResultWithId(int testPlanResultId) {
     TestPlanResult? tp = database.getTestCaseResultsById(testPlanResultId);
-    if(tp == null) return;
-    
+    if (tp == null) return;
+
     database.deleteAllTestCaseResultsForPlanResultWithId(testPlanResultId);
 
     database.deleteTestPlanResult(testPlanResultId);
@@ -98,13 +119,15 @@ class TestingManager {
     return testPlans;
   }
 
-  List<TestPlanResult> getTestPlanAndTestCaseResultsForTestPlanId(String deviceId, int planId) {
+  List<TestPlanResult> getTestPlanAndTestCaseResultsForTestPlanId(
+      String deviceId, int planId) {
     List<TestPlanResult> testPlanResults =
         database.getTestPlanResultByTestPlanAndDevice(deviceId, planId);
 
     List<TestPlanResult> toReturn = [];
-    for(var tpr in testPlanResults){
-      List<TestCaseResult> testCaseResults = database.getTestCaseResultsForTestPlanResult(tpr.id);
+    for (var tpr in testPlanResults) {
+      List<TestCaseResult> testCaseResults =
+          database.getTestCaseResultsForTestPlanResult(tpr.id);
       tpr.testCaseResults = testCaseResults;
       toReturn.add(tpr);
     }

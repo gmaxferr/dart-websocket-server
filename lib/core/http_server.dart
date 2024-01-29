@@ -372,7 +372,9 @@ class MyHttpServer {
         print("\n--- /createTestPlan ---\n");
         print(body);
         var testPlanData = body['testPlan'] as Map<String, dynamic>;
-        var testCasesData = (body['testCases'] as List).map((e) => e as Map<String, dynamic>).toList();
+        var testCasesData = (body['testCases'] as List)
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
 
         testingManager!.createTestPlan(testPlanData, testCasesData);
         print("New test plan added");
@@ -400,6 +402,19 @@ class MyHttpServer {
       }
     });
 
+    // Endpoint to update a TestCase by ID
+    router.post('/updateTestCase/<id>', (Request request, String id) async {
+      try {
+        int testCaseId = int.parse(id);
+        var testCaseData =
+            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
+        testingManager!.updateTestCase(testCaseId, testCaseData);
+        return Response.ok('TestCase updated');
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
+      }
+    });
     // Endpoint to delete a TestCase by ID
     router.delete('/deleteTestCase/<id>', (Request request, String id) async {
       try {
@@ -412,17 +427,19 @@ class MyHttpServer {
       }
     });
     // Endpoint to delete a TestCase by ID
-    router.delete('/deleteTestPlanResult/<id>', (Request request, String id) async {
+    router.delete('/deleteTestPlanResult/<id>',
+        (Request request, String id) async {
       try {
         int testPlanResultId = int.parse(id);
         testingManager!.deleteTestPlanResultWithId(testPlanResultId);
-        return Response.ok('TestPlanResult and all associated TestCaseResults were deleted');
+        return Response.ok(
+            'TestPlanResult and all associated TestCaseResults were deleted');
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');
       }
     });
-    
+
     // Endpoint to delete a TestPlan by ID
     router.delete('/deleteTestPlan/<id>', (Request request, String id) async {
       try {
@@ -435,7 +452,8 @@ class MyHttpServer {
       }
     });
     // Endpoint to delete a TestPlanResult by ID
-    router.delete('/deleteTestPlanResult/<id>', (Request request, String id) async {
+    router.delete('/deleteTestPlanResult/<id>',
+        (Request request, String id) async {
       try {
         int testPlanResultId = int.parse(id);
         testingManager!.deleteTestPlanResultWithId(testPlanResultId);

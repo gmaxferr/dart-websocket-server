@@ -125,25 +125,33 @@
             <td>${result.id}</td>
             <td>${result.testPlanId}</td>
             <td>${result.status}</td>
-            <td><button onclick="toggleDetails('details-${result.id}', this)">Toggle Details</button></td>
+            <td>
+                <button onclick="toggleDetails('details-${result.id}', this)">Toggle Details</button>
+                <button style="background-color: red;" onclick="deleteTestPlanResult(${result.id}, this)">Delete</button>
+                
+                </td>
         `;
-                let testCaseLines = '';
-                result.testCaseResults.forEach(testCase => {
+                let tdStyle = `style="text-align: start; vertical-align: baseline;"`;
+                result.testCaseResults.forEach(testCaseResult => {
+                    let testCaseLines = '';
                     testCaseLines = `
-                        ${testCaseLines}
-                        <td>Teste-${testCase.status}</td>
+                        <td ${tdStyle}><p style="color: blue;">TestCase #ID - Status</p><br/>#${testCaseResult.id} - ${testCaseResult.status}</td>
+                        <td ${tdStyle}><p style="color: blue;">Message Sent and Received</p><br/><p style="color: red;">Sent:</p>${testCaseResult.sentMessage}<br/><p style="color: red;">Received:</p>${testCaseResult.receivedMessage ?? "None received"}</td>
+                        <td ${tdStyle}><p style="color: blue;">Validation Details</p><br/>${testCaseResult.validationDetails}</td>
+                        <td ${tdStyle}><p style="color: blue;">Timestamp</p><br/>${testCaseResult.timestamp}</td>
                     `;
+
+                    // Create a hidden row for detailed test case results
+                    const detailsRow = tableBody.insertRow();
+                    detailsRow.id = `details-${result.id}`;
+                    detailsRow.style.display = 'none'; // Initially hidden
+                    detailsRow.innerHTML = `${testCaseLines}`;
+                    const detailsRow2 = tableBody.insertRow();
+                    detailsRow2.id = `detailsz-${result.id}`;
+                    detailsRow2.style.display = 'none'; // Initially hidden
+                    detailsRow2.innerHTML = `${testCaseLines}`;
                 });
 
-                // Create a hidden row for detailed test case results
-                const detailsRow = tableBody.insertRow();
-                detailsRow.id = `details-${result.id}`;
-                detailsRow.style.display = 'none'; // Initially hidden
-                detailsRow.innerHTML = `
-            <td colspan="3">
-                ${testCaseLines}
-            </td>
-        `;
             });
 
         }
@@ -154,6 +162,25 @@
                 .then(testCases => {
                     const detailsCell = detailsRow.getElementsByTagName('td')[0];
                     detailsCell.innerHTML = createTestCasesTable(testCases);
+                })
+                .catch(error => console.error('Error fetching test cases:', error));
+        }
+        function deleteTestPlanResult(testPlanResultId) {
+
+            if (!confirm('Are you sure you want to delete this test plan result?')) {
+                return; // Exit if user cancels the action
+            }
+
+            // Replace with correct endpoint to fetch test cases for a test plan
+            fetch('/deleteTestPlanResult/' + testPlanResultId, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            },)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error deleting test case');
+                    }
+                    fetchTestPlanResults();
                 })
                 .catch(error => console.error('Error fetching test cases:', error));
         }
