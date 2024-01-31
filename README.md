@@ -38,6 +38,7 @@ Before running the servers, you should be aware that some settings are configura
     export SHOW_PORT="y";
     export SERVER_HOST="evcore.demo.glcharge.com";
     export DISABLE_TESTING="n";
+    export TESTING_RESPONSE_MAX_WAIT_TIME=1;
 ```
 
  * **WEBSOCKET_PORT** - The port running the websocket server.
@@ -46,6 +47,7 @@ Before running the servers, you should be aware that some settings are configura
  * **SHOW_PORT** - If in the client overrides hostname with or without including the Port. May be needed in some server configurations. Defaults to adding the port, to remove it, SHOW_PORT must have as value the letter "n" instead of "y".
  * **SERVER_HOST** - The server hostname (could be an IP, or domain), currenlty is needed to specify on the client (injected on _/simple-client_ endpoint).
  * **DISABLE_TESTING** - If the testing features should be enabled or not. Set to 'n' if you want to activate the features.
+ * **TESTING_RESPONSE_MAX_WAIT_TIME** - The number of seconds to wait between attempts to get a response from the device. This will be done 5 times before considering the device did not send response.
 
 ### Via Command Line
 

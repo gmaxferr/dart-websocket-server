@@ -248,13 +248,17 @@ class MyHttpServer {
             body: 'Error updating macros: ${e.toString()}');
       }
     });
+
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
+      print("CALLED /getAllTestPlans");
       try {
         String response = testPlanController!.getAllTestPlans();
+        print("Completed /getAllTestPlans [$response]");
         return Response.ok(response,
             headers: {'Content-Type': 'application/json'});
       } catch (err) {
+        print("Error while fetching /getAllTestPlans");
         return Response.notFound('Error retrieving testplans: $err',
             headers: {'Content-Type': 'application/json'});
       }

@@ -47,12 +47,13 @@ class TestingDatabase {
       CREATE TABLE IF NOT EXISTS TestCaseResults (
         id TEXT PRIMARY KEY,
         testCaseId TEXT NOT NULL,
+        testPlanResultId TEXT NOT NULL,
         ranOn TEXT NOT NULL,
         executionDate TEXT NOT NULL,
         status INTEGER NOT NULL,
         messageSent TEXT NOT NULL,
         messageReceived TEXT NOT NULL,
-        errorDescription TEXT,
+        resultSummary TEXT,
         FOREIGN KEY (testCaseId) REFERENCES TestCases(id),
         FOREIGN KEY (testPlanResultId) REFERENCES TestPlanResults(id)
       );
@@ -189,7 +190,7 @@ class TestingDatabase {
 // CRUD for TestCaseResults
   void insertTestCaseResult(Map<String, dynamic> data) {
     db.execute('''
-    INSERT INTO TestCaseResults (id, testCaseId, testPlanResultId, ranOn, executionDate, status, messageSent, messageReceived, errorDescription)
+    INSERT INTO TestCaseResults (id, testCaseId, testPlanResultId, ranOn, executionDate, status, messageSent, messageReceived, resultSummary)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   ''', [
       data['id'],
@@ -200,7 +201,7 @@ class TestingDatabase {
       data['status'],
       data['messageSent'],
       data['messageReceived'],
-      data['errorDescription']
+      data['resultSummary']
     ]);
   }
 
@@ -213,7 +214,7 @@ class TestingDatabase {
   void updateTestCaseResult(String id, Map<String, dynamic> data) {
     db.execute('''
     UPDATE TestCaseResults
-    SET testCaseId = ?, testPlanResultId = ?, ranOn = ?, executionDate = ?, status = ?, messageSent = ?, messageReceived = ?, errorDescription = ?
+    SET testCaseId = ?, testPlanResultId = ?, ranOn = ?, executionDate = ?, status = ?, messageSent = ?, messageReceived = ?, resultSummary = ?
     WHERE id = ?
   ''', [
       data['testCaseId'],
@@ -223,7 +224,7 @@ class TestingDatabase {
       data['status'],
       data['messageSent'],
       data['messageReceived'],
-      data['errorDescription'],
+      data['resultSummary'],
       id
     ]);
   }

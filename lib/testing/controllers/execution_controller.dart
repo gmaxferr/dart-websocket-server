@@ -7,14 +7,29 @@ class ExecutionController {
   ExecutionController(this._executionService);
 
   // Handle HTTP request to execute a TestPlan
-  Future<String> executeTestPlan(String deviceId, String testPlanId) async {
-    try {
-      var result =
-          await _executionService.executeTestPlan(testPlanId, deviceId);
-      return json.encode({'status': 'success', 'result': result.toJson()});
-    } catch (e) {
-      return json.encode({'status': 'error', 'message': e.toString()});
-    }
+  String executeTestPlan(String deviceId, String testPlanId) {
+    // Respond immediately to the client
+    Future(() {
+      // Execute the test plan in the background
+      _executionService.executeTestPlan(testPlanId, deviceId, null, null);
+    });
+
+    // Immediate response to the client
+    return json
+        .encode({'status': 'success', 'message': 'TestPlan execution started'});
+  }
+
+  // Handle HTTP request to execute a TestPlan
+  String executeMultipleTestPlans(String deviceId, List<String> testPlanIds) {
+    // Respond immediately to the client
+    Future(() {
+      // Execute the test plan in the background
+      _executionService.executeMultipleTestPlans(testPlanIds, deviceId);
+    });
+
+    // Immediate response to the client
+    return json
+        .encode({'status': 'success', 'message': 'TestPlan execution started'});
   }
 
   // Handle HTTP request to fetch the latest TestPlanResults
@@ -50,12 +65,10 @@ class ExecutionController {
   // Handle HTTP request to fetch the TestPlanResults by it's status
   String getTestPlanResultByStatus(String deviceId, int status) {
     try {
-      final result = _executionService.getTestPlanDeviceIdAndByStatus(deviceId, status);
+      final result =
+          _executionService.getTestPlanDeviceIdAndByStatus(deviceId, status);
 
-      return json.encode({
-        'status': 'success',
-        'data': result
-      });
+      return json.encode({'status': 'success', 'data': result});
     } catch (e) {
       return json.encode({'status': 'error', 'message': e.toString()});
     }

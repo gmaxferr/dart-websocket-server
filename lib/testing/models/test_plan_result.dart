@@ -1,6 +1,6 @@
 import 'test_case_result.dart';
 
-enum TestPlanResultStatus { success, allFailed, someFailed, failed }
+enum TestPlanResultStatus { waiting, executing, success, allFailed, someFailed, failed }
 
 class TestPlanResult {
   String id;

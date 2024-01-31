@@ -89,6 +89,10 @@ class MultiServerHandler {
 
 void main() async {
   // Initialize shared instances of DeviceManager and Database
+  final String _raw =
+      (Platform.environment['TESTING_RESPONSE_MAX_WAIT_TIME'] ?? '').toString();
+
+  final int? maxWaitTime = int.tryParse(_raw);
   final bool enableTestingUseCase =
       (Platform.environment['DISABLE_TESTING'] ?? '') == "n";
   final database = MyDatabase();
@@ -101,8 +105,8 @@ void main() async {
     final testingDatabase = TestingDatabase();
 
     final macroProcessor = MacroProcessor({});
-    final executionService =
-        ExecutionService(testingDatabase, deviceManager, macroProcessor);
+    final executionService = ExecutionService(
+        testingDatabase, deviceManager, macroProcessor, maxWaitTime ?? 1);
     final testPlanService = TestPlanService(testingDatabase);
     final testCaseService = TestCaseService(testingDatabase);
 

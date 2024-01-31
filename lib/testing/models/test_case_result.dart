@@ -1,4 +1,4 @@
-enum TestCaseResultStatus { success, failed }
+enum TestCaseResultStatus { waiting, executing, success, failed }
 
 class TestCaseResult {
   String id;
@@ -8,7 +8,7 @@ class TestCaseResult {
   TestCaseResultStatus status;
   String messageSent;
   String messageReceived;
-  String? errorDescription;
+  String? resultSummary;
 
   TestCaseResult({
     required this.id,
@@ -18,7 +18,7 @@ class TestCaseResult {
     required this.status,
     required this.messageSent,
     required this.messageReceived,
-    this.errorDescription,
+    this.resultSummary,
   });
 
   factory TestCaseResult.fromJson(Map<String, dynamic> json) => TestCaseResult(
@@ -29,7 +29,7 @@ class TestCaseResult {
         status: TestCaseResultStatus.values[json['status']],
         messageSent: json['messageSent'],
         messageReceived: json['messageReceived'],
-        errorDescription: json['errorDescription'],
+        resultSummary: json['resultSummary'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -40,6 +40,6 @@ class TestCaseResult {
         'status': status.index,
         'messageSent': messageSent,
         'messageReceived': messageReceived,
-        'errorDescription': errorDescription,
+        'resultSummary': resultSummary,
       };
 }
