@@ -1,5 +1,17 @@
 import 'dart:convert';
 
+class OcppParser {
+  // Parse an OCPP message from JSON string
+  static OcppMessage? parseMessage(String plainTextMessage) {
+    return OcppMessage.fromPlainText(plainTextMessage);
+  }
+
+  // Convert an OCPP message to JSON string
+  static String stringifyMessage(OcppMessage message) {
+    return message.toString();
+  }
+}
+
 class OcppMessage {
   final int messageType;
   final String messageId;
@@ -22,8 +34,14 @@ class OcppMessage {
 
       final int _messageType = _parsedMessage[0];
       final String _messageId = _parsedMessage[1];
-      final String? _actionName = _parsedMessage.length > 2 && _parsedMessage[2] is String ? _parsedMessage[2] : null;
-      final Map<String, dynamic> _data = _parsedMessage.length > 3 && _parsedMessage[3] is Map<String, dynamic> ? _parsedMessage[3] : {};
+      final String? _actionName =
+          _parsedMessage.length > 2 && _parsedMessage[2] is String
+              ? _parsedMessage[2]
+              : null;
+      final Map<String, dynamic> _data =
+          _parsedMessage.length > 3 && _parsedMessage[3] is Map<String, dynamic>
+              ? _parsedMessage[3]
+              : {};
 
       return OcppMessage._internal(
         messageType: _messageType,
@@ -40,7 +58,7 @@ class OcppMessage {
   @override
   String toString() {
     List<dynamic> messageList = [messageType, messageId];
-    
+
     // Add actionName to the list if it's not null
     if (actionName != null) {
       messageList.add(actionName);

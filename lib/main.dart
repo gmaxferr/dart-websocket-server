@@ -5,16 +5,30 @@ import 'package:dart_websocket_server/core/websocket_server.dart';
 import 'package:dart_websocket_server/database/database.dart';
 import 'package:dart_websocket_server/database/testing_database.dart';
 import 'package:dart_websocket_server/device_management/device_manager.dart';
-import 'package:dart_websocket_server/testing/testing_manager.dart';
+import 'package:dart_websocket_server/testing/controllers/execution_controller.dart';
+import 'package:dart_websocket_server/testing/controllers/test_case_controller.dart';
+import 'package:dart_websocket_server/testing/controllers/test_plan_controller.dart';
+import 'package:dart_websocket_server/testing/helpers/macro_processor.dart';
+import 'package:dart_websocket_server/testing/services/execution_service.dart';
+import 'package:dart_websocket_server/testing/services/test_case_service.dart';
+import 'package:dart_websocket_server/testing/services/test_plan_service.dart';
 
 class MultiServerHandler {
   static late MyHttpServer httpServer;
   static late WebSocketServer wsServer;
   final MyDatabase database;
   final DeviceManager deviceManager;
-  final TestingManager? testingManager;
+  final ExecutionController? executionController;
+  final TestPlanController? testPlanController;
+  final TestCaseController? testCaseController;
 
-  MultiServerHandler(this.deviceManager, this.database, this.testingManager);
+  MultiServerHandler(
+    this.deviceManager,
+    this.database,
+    this.executionController,
+    this.testPlanController,
+    this.testCaseController,
+  );
 
   init() {
     // Retrieve ports from environment variables or use default values
@@ -35,8 +49,18 @@ class MultiServerHandler {
 
     // Initialize and start the HTTP server
     try {
-      httpServer = MyHttpServer(httpSchema, hostname, httpPort, deviceManager,
-          database, noPort, testingManager);
+      httpServer = MyHttpServer(
+        httpSchema,
+        hostname,
+        httpPort,
+        deviceManager,
+        database,
+        noPort,
+        executionController,
+        testPlanController,
+        testCaseController,
+      );
+
       httpServer.start();
     } catch (err, trace) {
       print(err);
@@ -65,18 +89,35 @@ class MultiServerHandler {
 
 void main() async {
   // Initialize shared instances of DeviceManager and Database
-  final bool disableTestingUseCases =
+  final bool enableTestingUseCase =
       (Platform.environment['DISABLE_TESTING'] ?? '') == "n";
   final database = MyDatabase();
   final deviceManager = DeviceManager(database);
 
-  TestingManager? testingManager;
-  if (disableTestingUseCases) {
+  ExecutionController? executionController;
+  TestPlanController? testPlanController;
+  TestCaseController? testCaseController;
+  if (enableTestingUseCase) {
     final testingDatabase = TestingDatabase();
-    testingManager =
-        TestingManager(database: testingDatabase, deviceManager: deviceManager);
+
+    final macroProcessor = MacroProcessor({});
+    final executionService =
+        ExecutionService(testingDatabase, deviceManager, macroProcessor);
+    final testPlanService = TestPlanService(testingDatabase);
+    final testCaseService = TestCaseService(testingDatabase);
+
+    executionController = ExecutionController(executionService);
+    testPlanController = TestPlanController(testPlanService);
+    testCaseController = TestCaseController(testCaseService);
   }
-  final handler = MultiServerHandler(deviceManager, database, testingManager);
+
+  final handler = MultiServerHandler(
+    deviceManager,
+    database,
+    executionController,
+    testPlanController,
+    testCaseController,
+  );
 
   handler.init();
 }

@@ -1,78 +1,33 @@
-import 'package:dart_websocket_server/testing/models/ocpp_message.dart';
+import 'package:dart_websocket_server/testing/models/validation_mechanism.dart';
 
 class TestCase {
-  final int? id;
-  final String description;
-  final String
-      defaultMessage; // The default message to send, may contain macros
-  final String
-      validationPath; // XPath-like string or special case "#actionName"
-  final String expectedValue; // The value expected in the response
-  final String? extractionMacro; // The macro name for storing extracted values
+  String id;
+  String description;
+  String messageToSend;
+  List<ValidationMechanism> validations;
 
   TestCase({
     required this.id,
     required this.description,
-    required this.defaultMessage,
-    required this.validationPath,
-    required this.expectedValue,
-    this.extractionMacro,
+    required this.messageToSend,
+    required this.validations,
   });
 
-  bool validateResponse(
-      OcppMessage response, Map<String, dynamic> testPlanVariables) {
-    // if (response == null) {
-    //   return false;
-    // }
+  factory TestCase.fromJson(Map<String, dynamic> json) => TestCase(
+        id: json['id'],
+        description: json['description'],
+        messageToSend: json['messageToSend'],
+        validations: List<ValidationMechanism>.from(
+          json['validations'].map((x) => ValidationMechanism.fromJson(x)),
+        ),
+      );
 
-    dynamic actualValue;
-    if (validationPath == "#actionName") {
-      actualValue = response.actionName;
-    } else {
-      actualValue = extractValueFromJson(response.data, validationPath);
-    }
-
-    // Store the extracted value in the test plan variables if extractionMacro is defined
-    if (extractionMacro != null && actualValue != null) {
-      testPlanVariables[extractionMacro!] = actualValue;
-    }
-    print(
-        "PATH:\t\t$validationPath\nEXPECTED VALUE:\t${expectedValue}\nACTUAL VALUE:\t${actualValue}\n");
-    return actualValue == expectedValue;
-  }
-
-  dynamic extractValueFromJson(Map<String, dynamic> json, String path) {
-    dynamic current = json;
-    for (String part in path.split('.')) {
-      if (current is Map<String, dynamic> && current.containsKey(part)) {
-        current = current[part];
-      } else {
-        return null;
-      }
-    }
-    return current;
-  }
-
-  static TestCase from(Map<String, dynamic> map) {
-    return TestCase(
-      // Assuming these are the column names in the TestCases table
-      id: map['id'] == null ? null : map['id'] is String ? int.parse(map['id']) : map['id'], 
-      description: map['description'] ?? "",
-      defaultMessage: map['defaultMessage'] ?? "",
-      validationPath: map['validationPath'] ?? "",
-      expectedValue: map['expectedValue'] ?? "",
-      extractionMacro: map['extractionMacro'] ?? "",
-    );
-  }
-
-  Map toMap() {
-    return {
-      'id': this.id,
-      'description': this.description,
-      'defaultMessage': this.defaultMessage,
-      'validationPath': this.validationPath,
-      'expectedValue': this.expectedValue,
-      'extractionMacro': this.extractionMacro,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'description': description,
+        'messageToSend': messageToSend,
+        'validations': List<dynamic>.from(validations.map((x) => x.toJson())),
+      };
 }
+
+// Assuming ValidationMechanism is a class you have defined elsewhere.

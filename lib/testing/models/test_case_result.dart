@@ -1,52 +1,45 @@
-import 'package:dart_websocket_server/testing/models/test_plan.dart';
+enum TestCaseResultStatus { success, failed }
 
 class TestCaseResult {
-  final int id;
-  final int testPlanResultId;
-  final int testCaseId;
-  // final String result;
-  final TestStatus status;
-  final String sentMessage;
-  final String receivedMessage;
-  final String validationDetails;
-  final DateTime timestamp;
+  String id;
+  String testCaseId;
+  String ranOn;
+  DateTime executionDate;
+  TestCaseResultStatus status;
+  String messageSent;
+  String messageReceived;
+  String? errorDescription;
 
   TestCaseResult({
     required this.id,
-    required this.testPlanResultId,
     required this.testCaseId,
+    required this.ranOn,
+    required this.executionDate,
     required this.status,
-    // required this.result,
-    required this.sentMessage,
-    required this.receivedMessage,
-    required this.validationDetails,
-    required this.timestamp,
+    required this.messageSent,
+    required this.messageReceived,
+    this.errorDescription,
   });
 
-  static TestCaseResult from(Map<String, dynamic> map) {
-    return TestCaseResult(
-      // Column names from the TestCaseResults table
-      id: map['id'],
-      testPlanResultId: map['testPlanResultId'],
-      testCaseId: map['testCaseId'],
-      status: TestStatus.values.firstWhere((e) => e.name == map['status']),
-      sentMessage: map['sentMessage'],
-      receivedMessage: map['receivedMessage'],
-      validationDetails: map['validationDetails'],
-      timestamp: DateTime.parse(map['timestamp']),
-    );
-  }
+  factory TestCaseResult.fromJson(Map<String, dynamic> json) => TestCaseResult(
+        id: json['id'],
+        testCaseId: json['testCaseId'],
+        ranOn: json['ranOn'],
+        executionDate: DateTime.parse(json['executionDate']),
+        status: TestCaseResultStatus.values[json['status']],
+        messageSent: json['messageSent'],
+        messageReceived: json['messageReceived'],
+        errorDescription: json['errorDescription'],
+      );
 
-  Map toMap() {
-    return {
-      'id': this.id,
-      'testPlanResultId': this.testPlanResultId,
-      'testCaseId': this.testCaseId,
-      'status': this.status.name,
-      'sentMessage': this.sentMessage,
-      'receivedMessage': this.receivedMessage,
-      'validationDetails': this.validationDetails,
-      'timestamp': this.timestamp.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'testCaseId': testCaseId,
+        'ranOn': ranOn,
+        'executionDate': executionDate.toIso8601String(),
+        'status': status.index,
+        'messageSent': messageSent,
+        'messageReceived': messageReceived,
+        'errorDescription': errorDescription,
+      };
 }

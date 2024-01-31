@@ -6,10 +6,9 @@ import 'package:archive/archive_io.dart';
 import 'package:dart_websocket_server/database/database.dart';
 import 'package:dart_websocket_server/device_management/device_manager.dart';
 import 'package:dart_websocket_server/main.dart';
-import 'package:dart_websocket_server/testing/models/test_case.dart';
-import 'package:dart_websocket_server/testing/models/test_plan.dart';
-import 'package:dart_websocket_server/testing/models/test_plan_result.dart';
-import 'package:dart_websocket_server/testing/testing_manager.dart';
+import 'package:dart_websocket_server/testing/controllers/execution_controller.dart';
+import 'package:dart_websocket_server/testing/controllers/test_case_controller.dart';
+import 'package:dart_websocket_server/testing/controllers/test_plan_controller.dart';
 import 'package:path/path.dart' as path;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
@@ -18,7 +17,9 @@ import 'package:shelf_router/shelf_router.dart';
 class MyHttpServer {
   final DeviceManager deviceManager;
   final MyDatabase database;
-  final TestingManager? testingManager;
+  final ExecutionController? executionController;
+  final TestPlanController? testPlanController;
+  final TestCaseController? testCaseController;
   final int port;
   final String httpSchema;
   final String hostname;
@@ -26,8 +27,16 @@ class MyHttpServer {
 
   late HttpServer _server;
 
-  MyHttpServer(this.httpSchema, this.hostname, this.port, this.deviceManager,
-      this.database, this.noPortInAPI, this.testingManager);
+  MyHttpServer(
+      this.httpSchema,
+      this.hostname,
+      this.port,
+      this.deviceManager,
+      this.database,
+      this.noPortInAPI,
+      this.executionController,
+      this.testPlanController,
+      this.testCaseController);
 
   Handler get handler {
     final router = Router();
@@ -156,7 +165,8 @@ class MyHttpServer {
 
     // Route to get a TestPlan by ID
     router.get('/testing-enabled', (Request request) async {
-      if (this.testingManager == null) {
+      if (![executionController, testPlanController, testCaseController]
+          .contains(null)) {
         return Response.ok(
             'Testing Features are not enabled. Please check the Readme.md',
             headers: {'Content-Type': 'application/json'});
@@ -165,7 +175,8 @@ class MyHttpServer {
           headers: {'Content-Type': 'application/json'});
     });
 
-    if (testingManager == null) {
+    if ([executionController, testPlanController, testCaseController]
+        .contains(null)) {
       // Default route for handling non-existent routes
       router.all('/<ignored|.*>', (Request request) {
         final path = request.requestedUri.path;
@@ -228,11 +239,10 @@ class MyHttpServer {
     router.post('/updateTestPlanMacros/<testPlanId>',
         (Request request, String testPlanId) async {
       try {
-        int planId = int.parse(testPlanId);
-        Map<String, dynamic> macros =
-            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
-        testingManager!.updateTestPlanMacros(planId, macros);
-        return Response.ok('Macros updated successfully');
+        String rawMacrosString = await request.readAsString();
+        String res = testPlanController!
+            .updateTestPlanMacros(testPlanId, rawMacrosString);
+        return Response.ok(res);
       } catch (e) {
         return Response.internalServerError(
             body: 'Error updating macros: ${e.toString()}');
@@ -240,15 +250,14 @@ class MyHttpServer {
     });
     // Route to get a TestPlan by ID
     router.get('/getAllTestPlans', (Request request) async {
-      List<TestPlan> allTestPlans = testingManager!.getAllTestPlans();
-      print("Nr of TestPlans retrieved: ${allTestPlans.length}");
-      if (allTestPlans.isNotEmpty) {
-        return Response.ok(
-            jsonEncode(allTestPlans.map((e) => e.toMap()).toList()),
+      try {
+        String response = testPlanController!.getAllTestPlans();
+        return Response.ok(response,
+            headers: {'Content-Type': 'application/json'});
+      } catch (err) {
+        return Response.notFound('Error retrieving testplans: $err',
             headers: {'Content-Type': 'application/json'});
       }
-      return Response.notFound('No TestPlans found in database',
-          headers: {'Content-Type': 'application/json'});
     });
     // Endpoint to execute multiple test plans
     router.post('/executeTestPlans', (Request request) async {
@@ -256,33 +265,39 @@ class MyHttpServer {
         var body =
             jsonDecode(await request.readAsString()) as Map<String, dynamic>;
         String deviceId = body['deviceId'];
-        List<int> testPlanIds = List<int>.from(body['testPlanIds']);
+        List<String> testPlanIds = List<String>.from(body['testPlanIds']);
+        List results = [];
+        for (final tpId in testPlanIds) {
+          String result =
+              await executionController!.executeTestPlan(deviceId, tpId);
+          results.add(jsonDecode(result));
+        }
 
-        await testingManager!.runMultipleTestPlans(deviceId, testPlanIds);
-
-        return Response.ok('Test plans execution started');
+        return Response.ok(jsonEncode({"status": "success", "data": results}));
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');
       }
     });
 
-    // Get TestPlanResults (populatedwith test case results) for selected TestPlan ids.
+    // Get TestPlanResults (populated with test case results) for selected TestPlan ids.
     router.post('/testPlanAndCasesResultsForIds', (Request request) async {
       try {
         var body =
             jsonDecode(await request.readAsString()) as Map<String, dynamic>;
-        String deviceId = body['deviceId'];
-        List<int> testPlanIds = List<int>.from(body['testPlanIds']);
-
-        List<TestPlanResult> toReturn = [];
-        for (final testPlanId in testPlanIds) {
-          List<TestPlanResult> res = await testingManager!
-              .getTestPlanAndTestCaseResultsForTestPlanId(deviceId, testPlanId);
-          toReturn.addAll(res);
+        String? deviceId = body['deviceId'];
+        List<String> testPlanIds = List<String>.from(body['testPlanIds'] ?? []);
+        if (deviceId == null && testPlanIds.isEmpty) {
+          return Response.ok(jsonEncode({
+            'status': 'error',
+            'message': 'Specify a deviceId or TestPlan ids to filter data.'
+          }));
         }
 
-        return Response.ok(jsonEncode(toReturn.map((e) => e.toMap()).toList()));
+        final result = executionController!
+            .getTestPlanByIdAndDeviceId(deviceId, testPlanIds);
+
+        return Response.ok(jsonEncode({"status": "success", "data": result}));
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');
@@ -291,37 +306,37 @@ class MyHttpServer {
 
     // Route to get a TestPlan by ID
     router.get('/testPlan/<id>', (Request request, String id) async {
-      int testPlanId = int.parse(id);
-      TestPlan? testPlan = testingManager!.getTestPlanById(testPlanId);
-      if (testPlan != null) {
-        return Response.ok(jsonEncode(testPlan.toMap()),
+      try {
+        String testPlan = testPlanController!.getTestPlan(id);
+        return Response.ok(testPlan,
+            headers: {'Content-Type': 'application/json'});
+      } catch (err) {
+        return Response.notFound('Error: $err',
             headers: {'Content-Type': 'application/json'});
       }
-      return Response.notFound('TestPlan not found',
-          headers: {'Content-Type': 'application/json'});
     });
 
     // Route to get all TestCases for a TestPlan
     router.get('/testCases/<testPlanId>',
         (Request request, String testPlanId) async {
       try {
-        int id = int.parse(testPlanId);
-        var testCases = testingManager!.getTestCasesByTestPlanId(id);
-        return Response.ok(
-            jsonEncode(testCases.map((tc) => tc.toMap()).toList()),
+        var testCases =
+            testPlanController!.getTestCasesByTestPlanId(testPlanId);
+        return Response.ok(testCases,
             headers: {'Content-Type': 'application/json'});
       } catch (e) {
-        return Response.notFound('TestCases not found');
+        return Response.notFound('error: $e');
       }
     });
 
-    // Route to get TestPlan by status for a specific deviceId
-    router.get('/getTestPlanByStatus/<deviceId>/<status>',
+    // Route to get TestPlan executions by status for a specific deviceId
+    router.get('/getTestPlanExecutionsByStatus/<deviceId>/<status>',
         (Request request, String deviceId, String status) async {
       try {
-        var testPlans = testingManager!.getTestPlanByStatus(deviceId, status);
-        return Response.ok(
-            jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
+        int _status = int.parse(status);
+        var response =
+            executionController!.getTestPlanResultByStatus(deviceId, _status);
+        return Response.ok(response,
             headers: {'Content-Type': 'application/json'});
       } catch (e) {
         return Response.notFound('TestPlans not found for status $status');
@@ -330,55 +345,40 @@ class MyHttpServer {
 
     // Route to get a TestCase by ID
     router.get('/getTestCaseById/<id>', (Request request, String id) async {
-      int testCaseId = int.parse(id);
-      TestCase? testCase = testingManager!.getTestCaseById(testCaseId);
-      if (testCase != null) {
-        return Response.ok(jsonEncode(testCase.toMap()),
+      try {
+        String result = testCaseController!.getTestCase(id);
+        return Response.ok(result,
             headers: {'Content-Type': 'application/json'});
+      } catch (e) {
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
       }
-      return Response.notFound(jsonEncode(testCase!.toMap()),
-          headers: {'Content-Type': 'application/json'});
     });
 
     // Route to get TestPlans by a list of IDs
     router.post('/getTestPlansByIds', (Request request) async {
       try {
-        var ids = jsonDecode(await request.readAsString()) as List<dynamic>;
-        var testPlans = testingManager!.getTestPlansByIds(ids.cast<int>());
-        return Response.ok(
-            jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
+        var ids = jsonDecode(await request.readAsString()) as List<String>;
+        var testPlans = testPlanController!.getTestPlansByIds(ids);
+        return Response.ok(testPlans,
             headers: {'Content-Type': 'application/json'});
       } catch (e) {
-        return Response.internalServerError(body: 'Error processing request');
+        return Response.internalServerError(
+            body: 'Error processing request: ${e.toString()}');
       }
-    });
-
-    // Route to get TestPlans by Device ID
-    router.get('/getTestPlansByDeviceId/<deviceId>',
-        (Request request, String deviceId) async {
-      var testPlans = testingManager!.getTestPlansByDeviceId(deviceId);
-      if (testPlans.isEmpty) {
-        return Response.notFound('TestPlans not found for deviceId $deviceId');
-      }
-      return Response.ok(jsonEncode(testPlans.map((tp) => tp.toMap()).toList()),
-          headers: {'Content-Type': 'application/json'});
     });
 
     // Endpoint to create a TestPlan with TestCases
     router.post('/createTestPlan', (Request request) async {
       try {
-        var body =
-            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
-        print("\n--- /createTestPlan ---\n");
-        print(body);
-        var testPlanData = body['testPlan'] as Map<String, dynamic>;
-        var testCasesData = (body['testCases'] as List)
-            .map((e) => e as Map<String, dynamic>)
-            .toList();
+        var body = await request.readAsString();
 
-        testingManager!.createTestPlan(testPlanData, testCasesData);
+        testPlanController!.createTestPlan(body);
         print("New test plan added");
-        return Response.ok('Test Plan created successfully');
+        return Response.ok(jsonEncode({
+          'status': 'success',
+          'message': 'Test Plan created successfully'
+        }));
       } catch (e, trace) {
         print('Error processing request: ${e.toString()}\n$trace');
         return Response.internalServerError(
@@ -390,11 +390,11 @@ class MyHttpServer {
     router.post('/addTestCaseToTestPlan/<testPlanId>',
         (Request request, String testPlanId) async {
       try {
-        int planId = int.parse(testPlanId);
         var testCaseData =
             jsonDecode(await request.readAsString()) as Map<String, dynamic>;
 
-        testingManager!.addTestCaseToTestPlanWithId(planId, testCaseData);
+        testPlanController!
+            .associateTestCaseToTestPlanWithId(testPlanId, testCaseData);
         return Response.ok('TestCase added to TestPlan');
       } catch (e) {
         return Response.internalServerError(
@@ -405,10 +405,8 @@ class MyHttpServer {
     // Endpoint to update a TestCase by ID
     router.post('/updateTestCase/<id>', (Request request, String id) async {
       try {
-        int testCaseId = int.parse(id);
-        var testCaseData =
-            jsonDecode(await request.readAsString()) as Map<String, dynamic>;
-        testingManager!.updateTestCase(testCaseId, testCaseData);
+        var testCaseData = await request.readAsString();
+        testCaseController!.updateTestCase(id, testCaseData);
         return Response.ok('TestCase updated');
       } catch (e) {
         return Response.internalServerError(
@@ -418,8 +416,7 @@ class MyHttpServer {
     // Endpoint to delete a TestCase by ID
     router.delete('/deleteTestCase/<id>', (Request request, String id) async {
       try {
-        int testCaseId = int.parse(id);
-        testingManager!.deleteTestCaseWithId(testCaseId);
+        testCaseController!.deleteTestCase(id);
         return Response.ok('TestCase deleted');
       } catch (e) {
         return Response.internalServerError(
@@ -427,11 +424,10 @@ class MyHttpServer {
       }
     });
     // Endpoint to delete a TestCase by ID
-    router.delete('/deleteTestPlanResult/<id>',
-        (Request request, String id) async {
+    router.delete('/deleteTestPlanResult/<testPlanResultId>',
+        (Request request, String testPlanResultId) async {
       try {
-        int testPlanResultId = int.parse(id);
-        testingManager!.deleteTestPlanResultWithId(testPlanResultId);
+        executionController!.deleteTestPlanResult(testPlanResultId);
         return Response.ok(
             'TestPlanResult and all associated TestCaseResults were deleted');
       } catch (e) {
@@ -441,23 +437,11 @@ class MyHttpServer {
     });
 
     // Endpoint to delete a TestPlan by ID
-    router.delete('/deleteTestPlan/<id>', (Request request, String id) async {
+    router.delete('/deleteTestPlan/<testPlanId>',
+        (Request request, String testPlanId) async {
       try {
-        int testPlanId = int.parse(id);
-        testingManager!.deleteTestPlanWithId(testPlanId);
+        testPlanController!.deleteTestPlan(testPlanId);
         return Response.ok('TestPlan deleted');
-      } catch (e) {
-        return Response.internalServerError(
-            body: 'Error processing request: ${e.toString()}');
-      }
-    });
-    // Endpoint to delete a TestPlanResult by ID
-    router.delete('/deleteTestPlanResult/<id>',
-        (Request request, String id) async {
-      try {
-        int testPlanResultId = int.parse(id);
-        testingManager!.deleteTestPlanResultWithId(testPlanResultId);
-        return Response.ok('TestPlanResult deleted');
       } catch (e) {
         return Response.internalServerError(
             body: 'Error processing request: ${e.toString()}');
