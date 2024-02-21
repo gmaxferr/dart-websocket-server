@@ -50,6 +50,7 @@ class MyHttpServer {
      return Response.ok(jsonEncode({"$varName": value}),
           headers: {'Content-Type': 'application/json'});
     });
+    
     // Endpoint to send a message to a connected device
     router.post('/sendMessage/<deviceId>',
         (Request request, String deviceId) async {
