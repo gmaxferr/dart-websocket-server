@@ -45,7 +45,7 @@ class MyHttpServer {
     // Endpoint to retrieve message history for a device
     router.get('/vars/<varName>',
         (Request request, String varName) async {
-           final value = Platform.environment['varName'] ?? '';
+           final value = Platform.environment['$varName'] ?? '';
 
      return Response.ok(jsonEncode({"$varName": value}),
           headers: {'Content-Type': 'application/json'});
