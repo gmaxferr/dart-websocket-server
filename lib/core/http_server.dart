@@ -41,6 +41,15 @@ class MyHttpServer {
   Handler get handler {
     final router = Router();
 
+
+    // Endpoint to retrieve message history for a device
+    router.get('/vars/<varName>',
+        (Request request, String varName) async {
+           final value = Platform.environment['varName'] ?? '';
+
+     return Response.ok(jsonEncode({"$varName": value}),
+          headers: {'Content-Type': 'application/json'});
+    });
     // Endpoint to send a message to a connected device
     router.post('/sendMessage/<deviceId>',
         (Request request, String deviceId) async {
