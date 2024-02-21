@@ -140,8 +140,13 @@ class MyHttpServer {
 
         // Inject environment variables into HTML
         content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
-        content = content.replaceAll('{{API_ENDPOINT}}', hostname);
-        content = content.replaceAll('{{API_PORT}}', "$port");
+        if (noPortInAPI) {
+          content =
+              content.replaceAll('{{API_ENDPOINT}}:{{API_PORT}}', hostname);
+        } else {
+          content = content.replaceAll('{{API_ENDPOINT}}', hostname);
+          content = content.replaceAll('{{API_PORT}}', "$port");
+        }
         return Response.ok(content, headers: {'Content-Type': 'text/html'});
       } else {
         return Response.notFound('Page not found');
@@ -160,6 +165,7 @@ class MyHttpServer {
 
         // Inject environment variables into HTML
         content = content.replaceAll('{{API_SCHEMA}}', httpSchema);
+
         if (noPortInAPI) {
           content =
               content.replaceAll('{{API_ENDPOINT}}:{{API_PORT}}', hostname);
@@ -167,6 +173,7 @@ class MyHttpServer {
           content = content.replaceAll('{{API_ENDPOINT}}', hostname);
           content = content.replaceAll('{{API_PORT}}', "$port");
         }
+
         return Response.ok(content, headers: {'Content-Type': 'text/html'});
       } else {
         return Response.notFound('Page not found');
